@@ -27,7 +27,15 @@ htmlcov/
 # IDE/editor
 .vscode/
 .idea/
+*.code-workspace
 
 # OS files
 .DS_Store
 Thumbs.db
+
+# Project data artifacts
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+!data/processed/*.sample.csv
