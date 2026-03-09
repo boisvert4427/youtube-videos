@@ -34,7 +34,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--photos-dir", type=Path, default=DEFAULT_PHOTOS_DIR, help="Optional folder with club logos/photos")
     parser.add_argument("--flags-dir", type=Path, default=DEFAULT_FLAGS_DIR, help="Folder for cached country flag PNGs")
     parser.add_argument("--fps", type=int, default=60, help="Video fps")
-    parser.add_argument("--frames-per-period", type=int, default=35, help="Interpolation frames between ranking dates")
+    parser.add_argument("--frames-per-period", type=int, default=52, help="Interpolation frames between ranking dates")
     parser.add_argument("--top-n", type=int, default=15, help="Number of bars displayed")
     parser.add_argument("--title", type=str, default="UEFA Champions League Titles", help="Chart title")
     return parser.parse_args()
@@ -58,6 +58,7 @@ def main() -> None:
         year_in_media_box=True,
         leader_logo_in_header=True,
         show_bottom_date=False,
+        position_lerp=0.22,
     )
     print(f"[video_generator] UCL bar chart race generated -> {output}")
 

@@ -227,6 +227,7 @@ def render_video(
     year_in_media_box: bool = False,
     leader_logo_in_header: bool = False,
     show_bottom_date: bool = True,
+    position_lerp: float = 0.36,
 ) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -234,6 +235,8 @@ def render_video(
     ax.set_position([0.045, 0.07, 0.92, 0.84])
     photo_ax = fig.add_axes([0.825, 0.18, 0.10, 0.265], zorder=8)
     logo_ax = fig.add_axes([0.86, 0.84, 0.08, 0.11], zorder=9)
+    if year_in_media_box and leader_logo_in_header:
+        logo_ax.set_position([0.83, 0.48, 0.09, 0.13])
     _apply_gradient_background(fig)
     ax.set_zorder(2)
     ax.set_facecolor((0, 0, 0, 0))
@@ -260,8 +263,11 @@ def render_video(
     photo_cache: dict[str, np.ndarray] = {}
     flag_img_cache: dict[str, np.ndarray] = {}
     display_y_by_player: dict[str, float] = {}
-    position_lerp = 0.36
+    display_axis_max: float | None = None
     flags_dir.mkdir(parents=True, exist_ok=True)
+
+    global_peak = max((max(points.values()) if points else 0.0) for _, points, _ in frames)
+    global_axis_cap = _nice_axis_max(float(global_peak))
 
     def update(frame_index: int) -> None:
         ax.clear()
@@ -312,7 +318,14 @@ def render_video(
 
         values = [item["value"] for item in entries]
         max_val = max(values) if values else 100.0
-        x_axis_max = _nice_axis_max(max_val)
+        target_axis_max = _nice_axis_max(max_val)
+        nonlocal display_axis_max
+        if display_axis_max is None:
+            display_axis_max = target_axis_max
+        else:
+            # Smooth scale transitions to avoid abrupt zoom jumps.
+            display_axis_max = display_axis_max + (target_axis_max - display_axis_max) * 0.22
+        x_axis_max = max(display_axis_max, 1.0)
         small_scale = x_axis_max <= 200
         if small_scale:
             x_right = x_axis_max + max(0.9, x_axis_max * 0.10)
@@ -325,21 +338,21 @@ def render_video(
 
         ax.xaxis.set_ticks_position("top")
         ax.xaxis.set_label_position("top")
-        if x_axis_max <= 20:
+        if global_axis_cap <= 20:
             tick_step = 1
-        elif x_axis_max <= 50:
+        elif global_axis_cap <= 50:
             tick_step = 5
-        elif x_axis_max <= 100:
+        elif global_axis_cap <= 100:
             tick_step = 10
-        elif x_axis_max <= 500:
+        elif global_axis_cap <= 500:
             tick_step = 50
-        elif x_axis_max <= 2000:
+        elif global_axis_cap <= 2000:
             tick_step = 200
-        elif x_axis_max <= 4000:
+        elif global_axis_cap <= 4000:
             tick_step = 500
         else:
             tick_step = 1000
-        ax.set_xticks(np.arange(0, x_axis_max + 1, tick_step))
+        ax.set_xticks(np.arange(0, global_axis_cap + 1, tick_step))
         ax.tick_params(axis="x", colors="#7f90aa", labelsize=10, length=0, pad=8)
         ax.set_yticks([])
         ax.grid(axis="x", alpha=0.08, color="#87a0bd", linewidth=0.9)
@@ -474,9 +487,6 @@ def render_video(
             leader_name = ranked[0][0]
             photo_path = _find_player_photo(leader_name, photos_dir)
             if year_in_media_box:
-                photo_ax.add_patch(
-                    Rectangle((0, 0), 1, 1, facecolor=(1, 1, 1, 0.04), edgecolor="#7e8ea4", linewidth=1.6, zorder=5)
-                )
                 year_artist = photo_ax.text(
                     0.5,
                     0.5,
