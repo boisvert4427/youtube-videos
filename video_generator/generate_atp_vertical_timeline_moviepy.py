@@ -22,7 +22,7 @@ DEFAULT_AUDIO = PROJECT_ROOT / "data" / "raw" / "audio" / "audio.mp3"
 WIDTH = 1920
 HEIGHT = 1080
 ROUNDS = ["R128", "R64", "R32", "R16", "QF", "SF", "F"]
-TOTAL_DURATION = 90.0
+TOTAL_DURATION = 210.0
 HOLD_START = 5.0
 HOLD_END = 15.0
 FADE_OUT_AUDIO = 10.0
@@ -202,11 +202,17 @@ def _fit_font_to_width(draw: ImageDraw.ImageDraw, text: str, max_width: int, sta
 
 
 def render_card(entry: TimelineEntry, card_w: int, card_h: int, photos_dir: Path) -> np.ndarray:
-    img = Image.new("RGB", (card_w, card_h), color=entry.card_bg_color)
+    # Force an Indian Wells palette on cards for this template.
+    card_bg = "#2f7f90"
+    border_color = "#d8b16a"
+    name_bg = "#d9d5c9"
+    if entry.rank_label.upper().startswith("IW"):
+        name_bg = "#c5d8d9"
+
+    img = Image.new("RGB", (card_w, card_h), color=card_bg)
     draw = ImageDraw.Draw(img)
 
-    border_color = "#a86b38"
-    draw.rounded_rectangle((1, 1, card_w - 2, card_h - 2), radius=20, outline=border_color, width=4, fill=entry.card_bg_color)
+    draw.rounded_rectangle((1, 1, card_w - 2, card_h - 2), radius=20, outline=border_color, width=4, fill=card_bg)
 
     year_badge = (16, 16, 186, 96)
     draw.rounded_rectangle(year_badge, radius=16, fill="black", outline="black", width=2)
@@ -217,7 +223,7 @@ def render_card(entry: TimelineEntry, card_w: int, card_h: int, photos_dir: Path
     source_path = _resolve_player_image(entry, photos_dir)
     if source_path:
         try:
-            p = Image.open(source_path).convert("RGB")
+            p = ImageOps.exif_transpose(Image.open(source_path)).convert("RGB")
             # Keep the top of portraits visible (head), crop lower part first.
             p = ImageOps.fit(
                 p,
@@ -234,7 +240,7 @@ def render_card(entry: TimelineEntry, card_w: int, card_h: int, photos_dir: Path
         _draw_center_text(draw, photo_rect, entry.player_name, fallback_font, "#1a1a1a")
 
     name_rect = (10, 560, card_w - 10, 690)
-    draw.rectangle(name_rect, fill=entry.name_bg_color)
+    draw.rectangle(name_rect, fill=name_bg)
     name_font = _fit_font(draw, entry.player_name, max_width=card_w - 34, max_size=54, min_size=24)
     _draw_center_text(draw, name_rect, entry.player_name, name_font, "#111111")
 
@@ -248,18 +254,18 @@ def render_card(entry: TimelineEntry, card_w: int, card_h: int, photos_dir: Path
     _draw_center_text(draw, badge_rect, entry.rank_label, rank_font, "#f7dd2d")
 
     table_rect = (8, 800, card_w - 8, card_h - 8)
-    draw.rounded_rectangle(table_rect, radius=10, fill="#2b1509", outline="#b06d30", width=2)
+    draw.rounded_rectangle(table_rect, radius=10, fill="#214d59", outline="#d8b16a", width=2)
     rows = _normalize_results(entry.results)
     inner_top = table_rect[1] + 8
     row_h = int((table_rect[3] - table_rect[1] - 14) / 7)
-    round_font = _load_font(size=24, bold=True)
+    round_font = _load_font(size=12, bold=True)
     # Smaller fixed sizes to avoid collisions between opponent and score columns.
     opp_font = _load_font(size=23, bold=True)
-    score_font_base_size = 22
+    score_font = _load_font(size=22, bold=True)
     round_x = table_rect[0] + 16
     opp_x = table_rect[0] + 88
     score_right = table_rect[2] - 14
-    score_max_w = int(card_w * 0.24)
+    score_max_w = int(card_w * 0.28)
     col_gap = 14
     opp_max_w = max(40, score_right - score_max_w - col_gap - opp_x)
 
@@ -271,7 +277,6 @@ def render_card(entry: TimelineEntry, card_w: int, card_h: int, photos_dir: Path
 
         opp_display = _truncate_to_width(draw, _short_player_name(opp), opp_font, opp_max_w)
         score_display = score or "-"
-        score_font = _fit_font_to_width(draw, score_display, score_max_w, start_size=score_font_base_size, min_size=14)
 
         draw.text((round_x, y0 + 6), rnd, font=round_font, fill="#f0c93a")
         draw.text((opp_x, y0 + 6), opp_display, font=opp_font, fill="#e8e8e8")
@@ -309,7 +314,8 @@ def render_video(
     scroll_duration = duration - HOLD_START - HOLD_END
     if scroll_duration <= 0:
         raise RuntimeError("Invalid fixed timing configuration.")
-    total_shift = max(0.0, (len(entries) - 1) * pitch)
+    # Stop with the last full set of visible cards aligned on screen.
+    total_shift = max(0.0, (len(entries) - cards_visible) * pitch)
 
     # Indian Wells-like palette: desert sand + court blue gradient.
     xx = np.linspace(0, 1, WIDTH, dtype=np.float32)
@@ -362,7 +368,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT, help="Output .mp4 path")
     parser.add_argument("--photos-dir", type=Path, default=DEFAULT_PHOTOS_DIR, help="Player photos folder")
     parser.add_argument("--audio", type=Path, default=DEFAULT_AUDIO, help="Background music path")
-    parser.add_argument("--fps", type=int, default=30, help="Video fps")
+    parser.add_argument("--fps", type=int, default=120, help="Video fps")
     parser.add_argument("--cards-visible", type=int, default=4, help="Cards visible at once")
     return parser.parse_args()
 
