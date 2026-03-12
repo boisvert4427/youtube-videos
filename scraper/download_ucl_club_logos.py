@@ -26,6 +26,15 @@ CLUB_TITLES = {
     "Hamburger SV": "Hamburger SV",
     "Juventus": "Juventus FC",
     "Steaua Bucuresti": "FCSB",
+    "Barcelona": "FC Barcelona",
+    "Borussia Dortmund": "Borussia Dortmund",
+    "Chelsea": "Chelsea F.C.",
+    "Manchester City": "Manchester City F.C.",
+    "Marseille": "Olympique de Marseille",
+    "PSV Eindhoven": "PSV Eindhoven",
+    "Paris Saint-Germain": "Paris Saint-Germain F.C.",
+    "Porto": "FC Porto",
+    "Red Star Belgrade": "FK Crvena zvezda",
 }
 
 
@@ -40,6 +49,14 @@ def _fetch_json(url: str) -> dict:
 
 
 def _find_logo_url(wiki_title: str) -> str:
+    summary_url = "https://en.wikipedia.org/api/rest_v1/page/summary/" + urllib.parse.quote(wiki_title)
+    try:
+        summary = _fetch_json(summary_url)
+        url = summary.get("thumbnail", {}).get("source", "")
+        if url:
+            return str(url)
+    except Exception:
+        pass
     params = urllib.parse.urlencode(
         {
             "action": "query",
@@ -77,7 +94,7 @@ LIMIT 1
         return ""
     # Convert commons file URI to direct file path endpoint.
     filename = logo_uri.rsplit("/", 1)[-1]
-    return "https://commons.wikimedia.org/wiki/Special:FilePath/" + urllib.parse.quote(filename)
+    return "https://commons.wikimedia.org/wiki/Special:FilePath/" + urllib.parse.quote(filename) + "?width=700"
 
 
 def _download(url: str, out_path: Path) -> None:
@@ -93,10 +110,10 @@ def run() -> tuple[int, int]:
     for club_name, wiki_title in CLUB_TITLES.items():
         slug = _slugify(club_name)
         out_path = LOGOS_DIR / f"{slug}.png"
-        if out_path.exists():
+        if out_path.exists() and out_path.stat().st_size >= 12000:
             saved += 1
             continue
-        logo_url = _wikidata_logo_url(wiki_title) or _find_logo_url(wiki_title)
+        logo_url = _find_logo_url(wiki_title) or _wikidata_logo_url(wiki_title)
         if not logo_url:
             continue
         try:

@@ -17,13 +17,23 @@ USER_AGENT = "Mozilla/5.0 (compatible; Codex Paris-Nice photo downloader)"
 
 
 MANUAL_QUERIES = {
-    "Primož Roglič": ["Primoz Roglic", "Primož Roglič"],
-    "Tadej Pogačar": ["Tadej Pogacar", "Tadej Pogačar"],
-    "Michał Kwiatkowski": ["Michal Kwiatkowski", "Michał Kwiatkowski"],
-    "Luis León Sánchez": ["Luis Leon Sanchez", "Luis León Sánchez"],
-    "Jörg Jaksche": ["Jorg Jaksche", "Jörg Jaksche"],
-    "Andreas Klöden": ["Andreas Kloden", "Andreas Klöden"],
-    "Alex Zülle": ["Alex Zulle", "Alex Zülle"],
+    "Primoz Roglic": ["Primoz Roglic", "Primoz Roglic cyclist", "Primoz Roglic (cyclist)"],
+    "Tadej Pogacar": ["Tadej Pogacar", "Tadej Pogacar cyclist", "Tadej Pogacar (cyclist)"],
+    "Michal Kwiatkowski": ["Michal Kwiatkowski", "Michal Kwiatkowski cyclist"],
+    "Luis Leon Sanchez": ["Luis Leon Sanchez", "Luis Leon Sanchez cyclist", "Luis Leon Sanchez (cyclist)"],
+    "Jorg Jaksche": ["Jorg Jaksche", "Jorg Jaksche cyclist"],
+    "Andreas Kloden": ["Andreas Kloden", "Andreas Kloden cyclist"],
+    "Alex Zulle": ["Alex Zulle", "Alex Zulle cyclist"],
+}
+
+MANUAL_TITLES = {
+    "Gilbert Duclos-Lassalle": "Gilbert Duclos-Lassalle",
+    "Jorg Jaksche": "Jörg Jaksche",
+    "Floyd Landis": "Floyd Landis",
+    "Alberto Contador": "Alberto Contador",
+    "Luis Leon Sanchez": "Luis León Sánchez",
+    "Tony Martin": "Tony Martin (cyclist)",
+    "Bradley Wiggins": "Bradley Wiggins",
 }
 
 
@@ -33,6 +43,10 @@ def _slugify(value: str) -> str:
     return cleaned.strip("_")
 
 
+def _ascii_name(value: str) -> str:
+    return unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii").strip()
+
+
 def _fetch_json(url: str) -> dict:
     request = Request(url, headers={"User-Agent": USER_AGENT})
     with urlopen(request, timeout=30) as response:
@@ -40,16 +54,24 @@ def _fetch_json(url: str) -> dict:
 
 
 def _page_image_for_title(title: str) -> str | None:
+    summary_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{quote(title, safe='')}"
+    try:
+        summary = _fetch_json(summary_url)
+        thumbnail = summary.get("thumbnail", {}).get("source")
+        if thumbnail:
+            return thumbnail
+    except Exception:
+        pass
     url = (
-        "https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&piprop=original"
+        "https://en.wikipedia.org/w/api.php?action=query&prop=pageimages&piprop=original|thumbnail&pithumbsize=1600"
         f"&titles={quote(title)}&format=json&formatversion=2"
     )
     data = _fetch_json(url)
     page = data.get("query", {}).get("pages", [{}])[0]
-    return page.get("original", {}).get("source")
+    return page.get("thumbnail", {}).get("source") or page.get("original", {}).get("source")
 
 
-def _search_titles(query: str, limit: int = 5) -> list[str]:
+def _search_titles(query: str, limit: int = 6) -> list[str]:
     url = (
         "https://en.wikipedia.org/w/api.php?action=query&list=search"
         f"&srsearch={quote(query)}&format=json&utf8=1&srlimit={limit}"
@@ -59,12 +81,15 @@ def _search_titles(query: str, limit: int = 5) -> list[str]:
 
 
 def _candidate_queries(name: str) -> list[str]:
-    if name in MANUAL_QUERIES:
-        return MANUAL_QUERIES[name]
-    ascii_name = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode("ascii").strip()
-    queries = [name]
-    if ascii_name and ascii_name != name:
-        queries.insert(0, ascii_name)
+    ascii_name = _ascii_name(name)
+    queries: list[str] = []
+    manual = MANUAL_QUERIES.get(ascii_name) or MANUAL_QUERIES.get(name) or []
+    for candidate in manual + [ascii_name, name]:
+        if not candidate:
+            continue
+        for query in (candidate, f"{candidate} cyclist", f"{candidate} (cyclist)", f"{candidate} cycling"):
+            if query not in queries:
+                queries.append(query)
     return queries
 
 
@@ -102,14 +127,22 @@ def main() -> None:
             continue
 
         image_url = None
+        forced_title = MANUAL_TITLES.get(_ascii_name(name))
+        if forced_title:
+            try:
+                image_url = _page_image_for_title(forced_title)
+            except Exception:
+                image_url = None
         for query in _candidate_queries(name):
+            if image_url:
+                break
             try:
                 image_url = _page_image_for_title(query)
             except Exception:
                 image_url = None
             if image_url:
                 break
-            time.sleep(0.8)
+            time.sleep(1.2)
             try:
                 for title in _search_titles(query):
                     try:
@@ -118,12 +151,12 @@ def main() -> None:
                         image_url = None
                     if image_url:
                         break
-                    time.sleep(0.6)
+                    time.sleep(0.9)
             except Exception:
                 image_url = None
             if image_url:
                 break
-            time.sleep(1.2)
+            time.sleep(1.5)
 
         if not image_url:
             missing.append(name)
@@ -134,7 +167,7 @@ def main() -> None:
             downloaded += 1
         except Exception:
             missing.append(name)
-        time.sleep(1.5)
+        time.sleep(3.5)
 
     print(f"[scraper] Paris-Nice winner photos: already={already} downloaded={downloaded} missing={len(missing)}")
     if missing:

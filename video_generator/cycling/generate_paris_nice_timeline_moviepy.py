@@ -19,10 +19,10 @@ from video_generator.cycling.generate_paris_nice_timeline_preview import (
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-DEFAULT_OUTPUT = PROJECT_ROOT / "data" / "processed" / "cycling" / "paris_nice" / "paris_nice_timeline_postwar_1946_2025.mp4"
+DEFAULT_OUTPUT = PROJECT_ROOT / "data" / "processed" / "cycling" / "paris_nice" / "paris_nice_timeline_postwar_1951_2025.mp4"
 DEFAULT_AUDIO = PROJECT_ROOT / "data" / "raw" / "audio" / "audio.mp3"
 
-TOTAL_DURATION = 240.0
+TOTAL_DURATION = 300.0
 HOLD_START = 5.0
 HOLD_END = 15.0
 FPS = 120

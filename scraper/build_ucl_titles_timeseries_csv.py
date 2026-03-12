@@ -1,11 +1,16 @@
 from __future__ import annotations
 
 import csv
+import urllib.request
+from io import StringIO
 from pathlib import Path
+
+import pandas as pd
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 OUTPUT_CSV = PROJECT_ROOT / "data" / "processed" / "ucl_titles_timeseries_1956_2025.csv"
+FINALS_URL = "https://en.wikipedia.org/wiki/List_of_European_Cup_and_UEFA_Champions_League_finals"
 
 
 # European Cup / UEFA Champions League winners by final year.
@@ -83,74 +88,104 @@ WINNERS_BY_YEAR: list[tuple[int, str, str]] = [
 ]
 
 
-def build_rows() -> list[dict]:
-    titles_by_club: dict[str, int] = {}
-    country_by_club: dict[str, str] = {}
-    rows: list[dict] = []
-    first_15_unique_winners: list[str] = []
-    seen_winners: set[str] = set()
-    start_year: int | None = None
+def _load_finals_by_year() -> dict[int, dict[str, str]]:
+    req = urllib.request.Request(FINALS_URL, headers={"User-Agent": "youtube-videos-local/1.0"})
+    with urllib.request.urlopen(req, timeout=60) as response:
+        html = response.read().decode("utf-8", errors="ignore")
+    tables = pd.read_html(StringIO(html))
+    finals = tables[2]
+    results: dict[int, dict[str, str]] = {}
+    for _, row in finals.iterrows():
+        season = str(row["Season"])
+        score = str(row["Score"])
+        if "–" not in season or score.lower() == "v":
+            continue
+        start_year_text, end_year_text = season.split("–", 1)
+        start_year = int(start_year_text)
+        end_suffix = end_year_text.strip()
+        if len(end_suffix) == 2:
+            century = (start_year // 100) * 100
+            year = century + int(end_suffix)
+            if year < start_year:
+                year += 100
+        else:
+            year = int(end_suffix)
+        winner = str(row["Winners"]).strip()
+        runner_up = str(row["Runners-up"]).strip()
+        results[year] = {
+            "winner": winner,
+            "runner_up": runner_up,
+            "score": score,
+            "final_score_line": f"{winner} {score} {runner_up}",
+        }
+    return results
 
-    for year, winner, _ in WINNERS_BY_YEAR:
-        if winner not in seen_winners:
-            seen_winners.add(winner)
-            first_15_unique_winners.append(winner)
-            if len(first_15_unique_winners) == 15 and start_year is None:
-                start_year = year
-                break
 
-    if start_year is None:
-        return rows
-    first_competition_year = WINNERS_BY_YEAR[0][0]
+def build_rows() -> list[dict[str, str | int]]:
+    finals_by_year = _load_finals_by_year()
+    clubs = sorted({winner for _, winner, _ in WINNERS_BY_YEAR})
+    titles_by_club = {club: 0 for club in clubs}
+    country_by_club = {winner: country for _, winner, country in WINNERS_BY_YEAR}
+    rows: list[dict[str, str | int]] = []
+    previous_top10: set[str] = set()
 
-    for club in first_15_unique_winners:
-        titles_by_club[club] = 0
-
-    # Initial frame: all selected clubs start at 0.
-    initial_date = f"{first_competition_year - 1}-06-01"
-    initial_ranked = sorted(
-        ((club, titles_by_club.get(club, 0)) for club in first_15_unique_winners),
-        key=lambda item: (-item[1], item[0]),
-    )
-    for club, titles in initial_ranked:
-        country = next((c for _, w, c in WINNERS_BY_YEAR if w == club), "")
-        country_by_club[club] = country
+    initial_date = f"{WINNERS_BY_YEAR[0][0] - 1}-06-01"
+    for club in sorted(clubs):
         rows.append(
             {
                 "ranking_date": initial_date,
-                "player_name": club,
-                "country_code": country,
-                "points": titles,
+                "club_name": club,
+                "country_code": country_by_club.get(club, ""),
+                "titles": 0,
+                "won_this_year": 0,
+                "entered_top10": 0,
+                "final_score": "",
+                "final_runner_up": "",
+                "final_score_line": "",
             }
         )
 
     for year, winner, country_code in WINNERS_BY_YEAR:
-        if winner in titles_by_club:
-            titles_by_club[winner] = titles_by_club.get(winner, 0) + 1
+        titles_by_club[winner] += 1
         country_by_club[winner] = country_code
-        if year < first_competition_year:
-            continue
-
         ranking_date = f"{year}-06-01"
         ranked = sorted(
-            ((club, titles_by_club.get(club, 0)) for club in first_15_unique_winners),
+            ((club, titles_by_club[club]) for club in clubs),
             key=lambda item: (-item[1], item[0]),
         )
+        top10 = {club for club, _ in ranked[:10]}
+        final_meta = finals_by_year.get(year, {"score": "", "runner_up": "", "final_score_line": ""})
         for club, titles in ranked:
             rows.append(
                 {
                     "ranking_date": ranking_date,
-                    "player_name": club,
-                    "country_code": country_by_club[club],
-                    "points": titles,
+                    "club_name": club,
+                    "country_code": country_by_club.get(club, ""),
+                    "titles": titles,
+                    "won_this_year": 1 if club == winner else 0,
+                    "entered_top10": 1 if titles > 0 and club in top10 and club not in previous_top10 else 0,
+                    "final_score": final_meta["score"],
+                    "final_runner_up": final_meta["runner_up"],
+                    "final_score_line": final_meta["final_score_line"],
                 }
             )
+        previous_top10 = top10
     return rows
 
 
-def write_csv(rows: list[dict]) -> Path:
+def write_csv(rows: list[dict[str, str | int]]) -> Path:
     OUTPUT_CSV.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = ["ranking_date", "player_name", "country_code", "points"]
+    fieldnames = [
+        "ranking_date",
+        "club_name",
+        "country_code",
+        "titles",
+        "won_this_year",
+        "entered_top10",
+        "final_score",
+        "final_runner_up",
+        "final_score_line",
+    ]
     with OUTPUT_CSV.open("w", newline="", encoding="utf-8") as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()
