@@ -382,6 +382,27 @@ def _priority_order_map(states: list[ClubState]) -> dict[str, int]:
     return {state.club_name: idx for idx, state in enumerate(ranked)}
 
 
+def _build_stable_snapshot_priorities(snapshots: list[Snapshot]) -> list[dict[str, int]]:
+    if not snapshots:
+        return []
+
+    priorities: list[dict[str, int]] = []
+    prev_priority: dict[str, int] | None = None
+    for snapshot in snapshots:
+        ranked = sorted(
+            (state for state in snapshot.states if state.titles > 0),
+            key=lambda item: (
+                -item.titles,
+                (prev_priority or {}).get(item.club_name, 10_000),
+                item.club_name,
+            ),
+        )
+        current_priority = {state.club_name: idx for idx, state in enumerate(ranked)}
+        priorities.append(current_priority)
+        prev_priority = current_priority
+    return priorities
+
+
 def _interp_values(prev: Snapshot, nxt: Snapshot, alpha: float) -> list[ClubState]:
     prev_map = {s.club_name: s for s in prev.states}
     next_map = {s.club_name: s for s in nxt.states}
@@ -440,6 +461,7 @@ def render_video(
     snapshots = _filter_snapshots(snapshots, start_year, end_year)
     if len(snapshots) < 2:
         raise RuntimeError("Not enough UCL snapshots to render.")
+    snapshot_priorities = _build_stable_snapshot_priorities(snapshots)
 
     logo_cache = _build_logo_cache(logos_dir)
     flag_cache = _build_flag_cache(flags_dir)
@@ -508,7 +530,7 @@ def render_video(
         move_alpha = _smoothstep(_phase_delay(transition_alpha, 0.02, 0.96))
         interp = _interp_values(prev, nxt, value_alpha)
         interp_map = {state.club_name: state for state in interp}
-        prev_priority = _priority_order_map(prev.states)
+        prev_priority = snapshot_priorities[period_index]
         prev_rank = _rank_with_tie_priority(prev.states, top_n, prev_priority)
         next_rank = _rank_with_tie_priority(nxt.states, top_n, prev_priority)
         prev_map = {state.club_name: state for state in prev.states}
@@ -530,32 +552,52 @@ def render_video(
             draw.line((x, 204, x, HEIGHT - 120), fill=(0, 0, 0, 88), width=2)
             draw.text((x - 8, 176), str(tick), font=tick_font, fill=(0, 0, 0, 120))
 
-        year_center_x = 1640
+        year_center_x = 1600
         score_box_max_w = 520
         score_text = nxt.final_score_line or ""
         score_font = _fit_font_size(draw, score_text, score_box_max_w - 40, 34, 22, bold=True) if score_text else _load_font(34, bold=True)
         score_bbox = draw.textbbox((0, 0), score_text or " ", font=score_font)
+        trophy_w = trophy_img.width if trophy_img is not None else 0
         trophy_h = trophy_img.height if trophy_img is not None else 0
-        year_anchor_y = 705
-        trophy_gap = 24
-        trophy_top_y = year_anchor_y - trophy_h - trophy_gap
-        score_anchor_y = 850
+        badge_pad_x = 36
+        badge_pad_top = 28
+        badge_gap_1 = 16
+        badge_gap_2 = 24
+        score_h = max(56, score_bbox[3] - score_bbox[1] + 16) if score_text else 0
+        year_bbox = draw.textbbox((0, 0), str(nxt.year), font=year_font)
+        year_h = year_bbox[3] - year_bbox[1]
+        badge_w = 560
+        badge_h = badge_pad_top + trophy_h + badge_gap_1 + year_h + badge_gap_2 + score_h + 28
+        badge_left = year_center_x - badge_w // 2
+        badge_top = 645
+        badge_right = badge_left + badge_w
+        badge_bottom = badge_top + badge_h
+        badge_layer = ImageDraw.Draw(frame, "RGBA")
+        badge_layer.rounded_rectangle(
+            (badge_left, badge_top, badge_right, badge_bottom),
+            radius=28,
+            fill=(8, 19, 39, 212),
+            outline=(244, 200, 75, 168),
+            width=2,
+        )
+        badge_layer.rounded_rectangle(
+            (badge_left + 8, badge_top + 8, badge_right - 8, badge_bottom - 8),
+            radius=22,
+            outline=(255, 255, 255, 26),
+            width=1,
+        )
+        content_center_x = badge_left + badge_w // 2
+        trophy_top_y = badge_top + badge_pad_top
         if trophy_img is not None:
-            trophy_x = year_center_x - trophy_img.width // 2 - 18
+            trophy_x = content_center_x - trophy_img.width // 2 - 10
             frame.alpha_composite(trophy_img, (trophy_x, trophy_top_y))
-        draw.text((year_center_x, year_anchor_y), str(nxt.year), font=year_font, fill="#f4c84b", anchor="ma")
+        year_anchor_y = trophy_top_y + trophy_h + badge_gap_1
+        draw.text((content_center_x, year_anchor_y), str(nxt.year), font=year_font, fill="#f4c84b", anchor="ma")
         if nxt.final_score_line:
-            box_w = max(280, min(score_box_max_w, score_bbox[2] - score_bbox[0] + 54))
+            score_anchor_y = year_anchor_y + year_h + badge_gap_2
             score_layer = ImageDraw.Draw(frame, "RGBA")
-            score_layer.rounded_rectangle(
-                (year_center_x - box_w // 2, score_anchor_y - 40, year_center_x + box_w // 2, score_anchor_y + 20),
-                radius=20,
-                fill=(9, 26, 52, int(175 * score_alpha)),
-                outline=(244, 200, 75, int(135 * score_alpha)),
-                width=2,
-            )
             score_layer.text(
-                (year_center_x, score_anchor_y - 28),
+                (content_center_x, score_anchor_y),
                 score_text,
                 font=score_font,
                 fill=(244, 247, 251, int(255 * score_alpha)),

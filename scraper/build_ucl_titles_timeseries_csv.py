@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import re
 import urllib.request
 from io import StringIO
 from pathlib import Path
@@ -11,6 +12,19 @@ import pandas as pd
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 OUTPUT_CSV = PROJECT_ROOT / "data" / "processed" / "ucl_titles_timeseries_1956_2025.csv"
 FINALS_URL = "https://en.wikipedia.org/wiki/List_of_European_Cup_and_UEFA_Champions_League_finals"
+SHOOTOUTS_BY_YEAR: dict[int, str] = {
+    1984: "4-2 pens.",
+    1986: "2-0 pens.",
+    1988: "6-5 pens.",
+    1991: "5-3 pens.",
+    1996: "4-2 pens.",
+    2001: "5-4 pens.",
+    2003: "3-2 pens.",
+    2005: "3-2 pens.",
+    2008: "6-5 pens.",
+    2012: "4-3 pens.",
+    2016: "5-3 pens.",
+}
 
 
 # European Cup / UEFA Champions League winners by final year.
@@ -112,6 +126,11 @@ def _load_finals_by_year() -> dict[int, dict[str, str]]:
             year = int(end_suffix)
         winner = str(row["Winners"]).strip()
         runner_up = str(row["Runners-up"]).strip()
+        score = _normalize_score(score)
+        winner = _normalize_team_name(winner)
+        runner_up = _normalize_team_name(runner_up)
+        if year in SHOOTOUTS_BY_YEAR:
+            score = f"{score} ({SHOOTOUTS_BY_YEAR[year]})"
         results[year] = {
             "winner": winner,
             "runner_up": runner_up,
@@ -119,6 +138,27 @@ def _load_finals_by_year() -> dict[int, dict[str, str]]:
             "final_score_line": f"{winner} {score} {runner_up}",
         }
     return results
+
+
+def _normalize_score(score: str) -> str:
+    score = score.replace("\xa0", " ").strip()
+    score = re.sub(r"\[[^\]]*\]", "", score)
+    score = re.sub(r"\*+", "", score)
+    score = re.sub(r"\s+", " ", score).strip()
+    score = score.replace(" aet", " a.e.t.")
+    score = score.replace(" AET", " a.e.t.")
+    score = score.replace(" aet.", " a.e.t.")
+    score = re.sub(r"\bpen(?:s|alties)?\.?\b", "pens.", score, flags=re.IGNORECASE)
+    score = re.sub(r"\s+", " ", score).strip()
+    return score
+
+
+def _normalize_team_name(name: str) -> str:
+    name = name.replace("\xa0", " ").strip()
+    name = re.sub(r"\[[^\]]*\]", "", name)
+    name = name.replace("+", "")
+    name = re.sub(r"\s+", " ", name).strip()
+    return name
 
 
 def build_rows() -> list[dict[str, str | int]]:

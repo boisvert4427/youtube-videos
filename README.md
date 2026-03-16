@@ -31,7 +31,9 @@ Regle d'organisation:
    - `python video_generator/generate_atp_vertical_timeline.py`
 5. Generer une video timeline verticale ATP en MoviePy (rendu template):
    - `python video_generator/generate_atp_vertical_timeline_moviepy.py`
-6. Generer la video timeline Paris-Nice:
+6. Generer une video ATP en format Shorts:
+   - `python video_generator/generate_atp_shorts_timeline_moviepy.py`
+7. Generer la video timeline Paris-Nice:
    - `python video_generator/generate_paris_nice_timeline_moviepy.py`
 
 Regles fixes du template Indian Wells (toujours):
@@ -72,6 +74,22 @@ de timeline par annee (carte joueur + badge + liste de resultats).
 Commande:
 
 - `python video_generator/generate_atp_vertical_timeline.py`
+
+## Nouveau template: ATP Shorts
+
+Fichiers principaux:
+
+- Video finale: `python video_generator/tennis/generate_atp_shorts_timeline_moviepy.py`
+- Wrapper compatible: `python video_generator/generate_atp_shorts_timeline_moviepy.py`
+
+Regles fixes du template Shorts:
+
+- Format sortie: `1080x1920` MP4
+- Duree totale: `75s`
+- Freeze debut: `2.5s`
+- Freeze fin: `4s`
+- Audio source: `data/raw/audio/audio.mp3`
+- Fade out audio final: `6s`
 
 ## Template Paris-Nice
 

@@ -1,0 +1,1 @@
+"""Football video generation templates."""
