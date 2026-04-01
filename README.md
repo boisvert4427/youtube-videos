@@ -1,15 +1,19 @@
 # youtube-videos
 
-Projet structure en 2 modules:
+Projet structure en 3 modules:
 
 - `scraper/`: collecte, normalisation, export CSV.
 - `video_generator/`: lecture du CSV et preparation des donnees video.
+- `history/`: timelines historiques, datasets, portraits et rendus video.
 
 ## Structure
 
 - `data/raw/`: donnees brutes temporaires.
 - `data/processed/`: CSV normalises consommes par la video.
 - `schemas/`: contrat de colonnes CSV entre scraper et generateur video.
+- `history/data/raw/`: donnees et portraits du module histoire.
+- `history/data/processed/`: exports CSV, previews et videos du module histoire.
+- `history/scripts/`: scripts de build/render du module histoire.
 
 Regle d'organisation:
 
@@ -18,6 +22,25 @@ Regle d'organisation:
 - Ranger les fichiers par domaine (`cycling`, `tennis`, `football`, etc.), puis par competition ou usage si necessaire.
 - Privilegier une structure stable des le depart pour eviter l'accumulation de fichiers disperses.
 - Si un nouveau bloc fonctionnel apparait, creer les dossiers adaptes avant d'ajouter les fichiers.
+
+## Module History
+
+Le module `history/` est separe de la logique sport, tout en restant dans le meme repo.
+
+Fichiers principaux:
+
+- Dataset regnes: `history/data/raw/france_kings_reigns.csv`
+- CSV annuel: `history/data/processed/france_kings_yearly_timeline.csv`
+- Portraits: `history/data/raw/portraits/`
+- Preview image: `history/data/processed/france_kings_timeline_preview.png`
+- Preview video court: `history/data/processed/france_kings_timeline_preview_10s_15fps.mp4`
+
+Commandes:
+
+- `python history/scripts/build_france_kings_yearly_timeline.py`
+- `python history/scripts/download_france_kings_portraits.py`
+- `python history/scripts/render_france_kings_timeline_preview.py`
+- `python history/scripts/generate_france_kings_timeline_video.py --duration 10 --fps 15 --output history/data/processed/france_kings_timeline_preview_10s_15fps.mp4`
 
 ## Utilisation
 
