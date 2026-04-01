@@ -50,6 +50,7 @@ ALPHA3_TO_ALPHA2 = {
     "GRE": "GR",
     "ITA": "IT",
     "JPN": "JP",
+    "MEX": "MX",
     "NED": "NL",
     "NOR": "NO",
     "POL": "PL",
@@ -59,7 +60,9 @@ ALPHA3_TO_ALPHA2 = {
     "SRB": "RS",
     "SUI": "CH",
     "SWE": "SE",
+    "UKR": "UA",
     "USA": "US",
+    "ZAF": "ZA",
 }
 
 EMOJI_FONT_PATH = Path("C:/Windows/Fonts/seguiemj.ttf")
