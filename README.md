@@ -150,3 +150,142 @@ Notes data:
 - Le CSV est rempli depuis l'API Wikipedia en best-effort.
 - Les annees recentes ont plus souvent le top 5 GC complet.
 - Les annees anciennes peuvent rester partielles si Wikipedia ne fournit pas de tableau final exploitable.
+
+## Template Tour des Flandres Shorts
+
+Fichiers principaux:
+
+- CSV: `data/processed/cycling/tour_of_flanders_titles_top10_cards.csv`
+- Builder CSV: `python scraper/cycling/build_tour_of_flanders_titles_cards_csv.py`
+- Video finale: `python video_generator/cycling/generate_tour_of_flanders_titles_cards_shorts_moviepy.py`
+
+Compatibilite:
+
+- Le wrapper `python video_generator/generate_tour_of_flanders_titles_cards_shorts_moviepy.py` reste utilisable.
+
+Comment est faite la video:
+
+- Format Shorts vertical avec cards qui defilent horizontalement.
+- On affiche les `10` plus gros vainqueurs du Tour des Flandres.
+- Le tri se fait d'abord par `nombre de titres`, puis par `nombre de podiums` en cas d'egalite.
+- La numerotation est reordonnee pour afficher `1` au meilleur rang.
+- Chaque card affiche:
+  - photo du coureur
+  - drapeau
+  - nombre de titres
+  - nombre de podiums
+  - annees de victoire
+- Les portraits sont stockes localement dans `data/raw/` et la video finale est regeneree apres ajout/correction des photos manquantes.
+
+Sorties:
+
+- Video finale: `data/processed/cycling/tour_of_flanders_titles_top10_shorts.mp4`
+
+Source de reference:
+
+- Historique officiel hommes elite: `https://www.rondevanvlaanderen.be/en/race/men-elite/history`
+
+## Template MVP Race Shorts
+
+Fichiers principaux:
+
+- Script principal: `video_generator/basketball/generate_mvp_race_shorts_moviepy.py`
+- Wrapper: `video_generator/generate_mvp_race_shorts_moviepy.py`
+- Sortie finale par defaut: `data/processed/basketball/mvp_race_shorts.mp4`
+- Preview conseillee: `data/processed/basketball/mvp_race_shorts_preview.mp4`
+
+Structure conseillee:
+
+- `data/raw/mvp_race_assets/`
+  - `jokic.png`
+  - `sga.png`
+  - `doncic.png`
+  - autres PNG / JPG si tu adaptes le template
+- `data/raw/audio/`
+  - musique de fond
+  - SFX optionnels `swoosh` et `hit`
+
+Comment est faite la video:
+
+- Format vertical `1080x1920`
+- Duree par defaut `30s`
+- `30 fps`
+- Hook `2s`
+- Intro candidats `4s`
+- Comparaison de `4` stats `12s`
+- Reveal score MVP `6s`
+- Podium `4s`
+- CTA final `2s`
+- Fond dramatique avec glow, vignetting, particules et motion legere
+- Fallback propre si images, fontes ou audio manquent
+
+Stats d'exemple:
+
+- `points per game`
+- `assists per game`
+- `rebounds per game`
+- `team win %`
+- `score MVP /100`
+
+Requirements:
+
+- `moviepy>=2.0`
+- `Pillow>=10.0`
+- `numpy>=1.24`
+
+Commandes:
+
+- Rendu standard:
+  - `python video_generator/generate_mvp_race_shorts_moviepy.py`
+- Avec SFX:
+  - `python video_generator/generate_mvp_race_shorts_moviepy.py --swoosh-sfx data/raw/audio/swoosh.mp3 --hit-sfx data/raw/audio/hit.mp3`
+- Preview rapide:
+  - `python video_generator/generate_mvp_race_shorts_moviepy.py --output data/processed/basketball/mvp_race_shorts_preview.mp4 --music data/raw/audio/audio.mp3`
+
+## Template MVP Race Shorts Manim
+
+Fichiers principaux:
+
+- Script principal: `video_generator/basketball/generate_mvp_race_shorts_manim.py`
+- Wrapper: `video_generator/generate_mvp_race_shorts_manim.py`
+- Requirements: `requirements-manim-mvp-race.txt`
+
+Structure:
+
+- `data/raw/mvp_race_assets/`
+  - `jokic.png`
+  - `sga.png`
+  - `doncic.png`
+- `data/raw/audio/`
+  - musique de fond
+  - SFX optionnels
+- `data/processed/basketball/manim_mvp_race/`
+  - rendus Manim
+
+Comment est fait le template:
+
+- `Scene` reutilisables:
+  - `HookScene`
+  - `Top3IntroScene`
+  - `StatsBarsScene`
+  - `ScoreRevealScene`
+  - `PodiumScene`
+  - `CTAScene`
+  - `MVPRaceShort`
+- Format vertical `1080x1920`
+- Pacing Shorts avec mouvement ou intensification toutes les `1-2s`
+- Fond dramatique, glow, cartes premium, reveal du leader et podium final
+- Mix audio optionnel via MoviePy apres le render Manim
+
+Installation:
+
+- `pip install -r requirements-manim-mvp-race.txt`
+
+Commandes:
+
+- Afficher l'aide:
+  - `python video_generator/generate_mvp_race_shorts_manim.py`
+- Render de la scene principale:
+  - `python video_generator/generate_mvp_race_shorts_manim.py --render --scene MVPRaceShort --quality h`
+- Render + mix audio:
+  - `python video_generator/generate_mvp_race_shorts_manim.py --render --scene MVPRaceShort --quality h --mix-audio --audio data/raw/audio/audio.mp3`

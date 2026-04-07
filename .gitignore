@@ -1,5 +1,6 @@
 # Virtual environments
 .venv/
+.venv-manim/
 venv/
 
 # Python cache/bytecode
@@ -32,6 +33,11 @@ htmlcov/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Local scratch / temp assets
+frame*.png
+tmp_*.html
+*TEMP_MPY_wvf_snd.mp4
 
 # Project data artifacts
 data/raw/*
