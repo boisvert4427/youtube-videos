@@ -45,3 +45,5 @@ data/raw/*
 data/processed/*
 !data/processed/.gitkeep
 !data/processed/*.sample.csv
+
+*.png

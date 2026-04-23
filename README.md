@@ -58,6 +58,20 @@ Commandes:
    - `python video_generator/generate_atp_shorts_timeline_moviepy.py`
 7. Generer la video timeline Paris-Nice:
    - `python video_generator/generate_paris_nice_timeline_moviepy.py`
+8. Generer un Short Federer vs Nadal hyper optimise:
+   - `python video_generator/generate_federer_vs_nadal_duel_shorts_moviepy.py`
+9. Generer un Short Federer vs Nadal retro gaming:
+   - `python video_generator/generate_federer_vs_nadal_retro_fight_shorts_moviepy.py`
+10. Generer un Short PSG vs Liverpool 2026 ultra anime:
+   - `python video_generator/generate_psg_vs_liverpool_double_confrontation_shorts_moviepy.py`
+11. Generer un Short SGA vs Jokic version Bird vs Magic:
+   - `python video_generator/generate_sga_vs_jokic_career_shorts_moviepy.py`
+12. Generer un Short Rookie of the Year Flagg vs Knueppel:
+   - `python video_generator/generate_cooper_flagg_vs_kon_knueppel_roty_shorts_moviepy.py`
+13. Generer un Short SGA vs Jokic vs Wemby:
+   - `python video_generator/generate_sga_jokic_wemby_mvp_short_moviepy.py`
+14. Generer un Short NBA bracket 2022 style TV:
+   - `python video_generator/generate_nba_playoff_bracket_shorts_moviepy.py`
 
 Regles fixes du template Indian Wells (toujours):
 
@@ -242,6 +256,26 @@ Commandes:
 - Preview rapide:
   - `python video_generator/generate_mvp_race_shorts_moviepy.py --output data/processed/basketball/mvp_race_shorts_preview.mp4 --music data/raw/audio/audio.mp3`
 
+## Template NBA Playoff Bracket Shorts
+
+Fichiers principaux:
+
+- Script principal: `video_generator/basketball/generate_nba_playoff_bracket_shorts_moviepy.py`
+- Wrapper: `video_generator/generate_nba_playoff_bracket_shorts_moviepy.py`
+- Sortie finale par defaut: `data/processed/basketball/nba_playoff_bracket_shorts.mp4`
+
+Comment est faite la video:
+
+- Format vertical `1080x1920`
+- Bracket stylise en 3 marches: round 1, semis, finals
+- Les teams gagnantes glissent d'une colonne a l'autre jusqu'au titre
+- Les equipes eliminees restent visibles en mode dim pour garder le contexte du bracket
+- Le champion finit sur une carte dorée au sommet de l'ecran
+
+Commandes:
+
+- `python video_generator/generate_nba_playoff_bracket_shorts_moviepy.py`
+
 ## Template MVP Race Shorts Manim
 
 Fichiers principaux:
@@ -288,4 +322,44 @@ Commandes:
 - Render de la scene principale:
   - `python video_generator/generate_mvp_race_shorts_manim.py --render --scene MVPRaceShort --quality h`
 - Render + mix audio:
-  - `python video_generator/generate_mvp_race_shorts_manim.py --render --scene MVPRaceShort --quality h --mix-audio --audio data/raw/audio/audio.mp3`
+- `python video_generator/generate_mvp_race_shorts_manim.py --render --scene MVPRaceShort --quality h --mix-audio --audio data/raw/audio/audio.mp3`
+
+## Template Federer vs Nadal Duel Shorts
+
+Fichiers principaux:
+
+- Script principal: `video_generator/tennis/generate_federer_vs_nadal_duel_shorts_moviepy.py`
+- Wrapper: `video_generator/generate_federer_vs_nadal_duel_shorts_moviepy.py`
+- Sortie finale par defaut: `data/processed/tennis/federer_vs_nadal_duel_shorts_optimized.mp4`
+
+Caractere du template:
+
+- Format vertical `1080x1920`
+- Duree cible `11.5s`
+- Hook ultra court, duel visuel immediat, puis 4 stats en mode battle
+- Climax centre sur `Clay Titles 11 vs 63`
+- Fin loop-friendly pour pousser la revision et le commentaire
+
+Commande:
+
+- `python video_generator/generate_federer_vs_nadal_duel_shorts_moviepy.py`
+
+## Template Federer vs Nadal Retro Fight Shorts
+
+Fichiers principaux:
+
+- Script principal: `video_generator/tennis/generate_federer_vs_nadal_retro_fight_shorts_moviepy.py`
+- Wrapper: `video_generator/generate_federer_vs_nadal_retro_fight_shorts_moviepy.py`
+- Sortie finale par defaut: `data/processed/tennis/federer_vs_nadal_retro_fight_shorts.mp4`
+
+Caractere du template:
+
+- Format vertical `1080x1920`
+- Ambiance retro gaming, CRT, neon, arcade
+- Fighters 3D-ish stylises Federer et Nadal
+- Chaque stat declenche un coup, un impact et un renversement visuel
+- Fin loop-friendly pour pousser la relecture
+
+Commande:
+
+- `python video_generator/generate_federer_vs_nadal_retro_fight_shorts_moviepy.py`

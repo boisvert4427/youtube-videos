@@ -24,12 +24,12 @@ PHOTOS_DIR = PROJECT_ROOT / "data" / "raw" / "player_photos"
 PIPER_MODEL_DIR = PROJECT_ROOT / "data" / "raw" / "tts_models" / "piper" / "fr_FR_siwis_medium"
 PIPER_MODEL = PIPER_MODEL_DIR / "fr_FR-siwis-medium.onnx"
 PIPER_CONFIG = PIPER_MODEL_DIR / "fr_FR-siwis-medium.onnx.json"
-DEFAULT_OUTPUT = PROJECT_ROOT / "data" / "processed" / "tennis" / "federer_vs_nadal_stats_shorts.mp4"
+DEFAULT_OUTPUT = PROJECT_ROOT / "data" / "processed" / "tennis" / "federer_vs_nadal_stats_shorts_v2.mp4"
 
 WIDTH = 1080
 HEIGHT = 1920
 FPS = 30
-TOTAL_DURATION = 30.0
+TOTAL_DURATION = 11.5
 VOICE_VOLUME = 1.05
 MUSIC_VOLUME = 0.38
 
@@ -38,22 +38,12 @@ NADAL_ORANGE = (238, 123, 41)
 WHITE = (246, 248, 252)
 
 STAT_ROWS = [
-    ("TOTAL SLAMS", "20", "22"),
-    ("AUSTRALIAN OPEN", "6", "2"),
-    ("ROLAND-GARROS", "1", "14"),
-    ("WIMBLEDON", "8", "2"),
-    ("US OPEN", "5", "4"),
-    ("ATP FINALS", "6", "0"),
-    ("OLYMPIC TITLES", "1", "2"),
-    ("YEAR-END #1", "5", "5"),
-    ("WEEKS #1", "310", "209"),
-    ("WIN %", "82.0", "82.6"),
-    ("H2H", "16", "24"),
-    ("TOP 10 WINS", "224", "186"),
-    ("WIN STREAK", "41", "32"),
-    ("MASTERS 1000", "28", "36"),
+    ("GRAND SLAMS", "20", "22"),
+    ("HEAD-TO-HEAD", "16", "24"),
+    ("CLAY TITLES", "11", "63"),
+    ("GRASS TITLES", "19", "4"),
 ]
-STAT_REVEAL_DURATION = 1.6
+STAT_REVEAL_DURATION = 0.95
 NARRATION_RATE = -1
 NARRATION_VOICE = "Microsoft Hortense Desktop"
 
@@ -224,6 +214,24 @@ def _build_narration_text() -> str:
         "Federer domine à Wimbledon, à l'Open d'Australie, au Masters et en semaines numéro un. "
         "Nadal écrase Roland Garros, les Masters 1000, le face à face et le total de Grands Chelems. "
         "Le pourcentage de victoires est presque identique, et les saisons terminées numéro un sont à égalité. "
+        f"{ending}"
+    )
+
+
+def _build_short_narration_text() -> str:
+    final_text = _final_stamp_text()
+    ending = (
+        "Federer gagne."
+        if final_text == "FEDERER WINS"
+        else "Nadal gagne."
+        if final_text == "NADAL WINS"
+        else "À vous de voir."
+    )
+    return (
+        "Nadal est injouable ici. "
+        "Federer contre Nadal. "
+        "Grand slams, face à face, terre battue, gazon. "
+        "Regarde encore. "
         f"{ending}"
     )
 
@@ -419,6 +427,21 @@ def _draw_center_stat_scene(
     draw.text((WIDTH // 2, 540), "STATS", font=small_font, fill="#f4f7fb", anchor="ma")
     draw.text((WIDTH - 170, 540), "NADAL", font=small_font, fill="#ffe5d8", anchor="ma")
 
+    left_seen = 0
+    right_seen = 0
+    for idx, (_, left_value, right_value) in enumerate(STAT_ROWS):
+        if stat_index is None or idx < stat_index or (idx == stat_index and phase > 0.72):
+            winner = _winner_side(left_value, right_value)
+            if winner == "left":
+                left_seen += 1
+            elif winner == "right":
+                right_seen += 1
+    score_box = (386, 438, 694, 506)
+    draw.rounded_rectangle(score_box, radius=28, fill=(10, 24, 43, 235), outline=(255, 215, 140, 128), width=2)
+    draw.text((488, 472), str(left_seen), font=_load_font(34, bold=True), fill="#dfefff", anchor="mm")
+    draw.text((540, 472), "-", font=_load_font(26, bold=True), fill="#ffe3ea", anchor="mm")
+    draw.text((592, 472), str(right_seen), font=_load_font(34, bold=True), fill="#ffe8d7", anchor="mm")
+
     left_target_x = 238
     center_x = WIDTH // 2
     right_target_x = WIDTH - 238
@@ -433,15 +456,15 @@ def _draw_center_stat_scene(
         row_center_y = (row_top + row_bottom) // 2
         active = stat_index is not None and idx == stat_index
         revealed = final_board or (stat_index is not None and idx < stat_index)
-        fill = (20, 50, 86, 255) if (active or revealed) else (255, 255, 255, 10)
-        outline = (*WHITE, 32) if (active or revealed) else (255, 255, 255, 12)
+        fill = (20, 50, 86, 255) if (active or revealed) else (255, 255, 255, 16)
+        outline = (*WHITE, 36) if (active or revealed) else (255, 255, 255, 12)
         draw.rounded_rectangle((84, row_top, WIDTH - 84, row_bottom), radius=18, fill=fill, outline=outline, width=2)
         row_phase = 1.0 if revealed else max(0.0, min(1.0, phase / 0.72))
-        row_visible = revealed or active
+        row_visible = True
 
         if row_visible:
-            stat_y = row_center_y - 14 + int((1.0 - row_phase) * 10)
-            label_fill = WHITE if active else (220, 229, 239)
+            stat_y = row_center_y - 14 + int((1.0 - row_phase) * 12)
+            label_fill = WHITE if active else (175, 188, 204)
             _draw_glow_text(frame, (center_x, stat_y), stat_name, list_font, label_fill, WHITE)
             left_font = value_font_map[left_value]
             right_font = value_font_map[right_value]
@@ -456,6 +479,24 @@ def _draw_center_stat_scene(
             _draw_glow_text(frame, (left_x, stat_y), left_value, left_font, WHITE, FEDERER_RED)
             _draw_glow_text(frame, (right_x, stat_y), right_value, right_font, WHITE, NADAL_ORANGE)
             winner_side = _winner_side(left_value, right_value)
+
+            left_num = float(left_value.replace(",", ""))
+            right_num = float(right_value.replace(",", ""))
+            bar_base = 176
+            bar_max = 276
+            left_bar = int(bar_max * row_phase * (left_num / max(left_num, right_num, 1.0)))
+            right_bar = int(bar_max * row_phase * (right_num / max(left_num, right_num, 1.0)))
+            bar_y = row_center_y + 26
+            draw.rounded_rectangle((center_x - bar_base - bar_max, bar_y - 6, center_x - bar_base, bar_y + 6), radius=6, fill=(255, 255, 255, 18))
+            draw.rounded_rectangle((center_x + bar_base, bar_y - 6, center_x + bar_base + bar_max, bar_y + 6), radius=6, fill=(255, 255, 255, 18))
+            draw.rounded_rectangle((center_x - bar_base - left_bar, bar_y - 6, center_x - bar_base, bar_y + 6), radius=6, fill=(*FEDERER_RED, 220))
+            draw.rounded_rectangle((center_x + bar_base, bar_y - 6, center_x + bar_base + right_bar, bar_y + 6), radius=6, fill=(*NADAL_ORANGE, 220))
+            if active:
+                glow_color = (255, 225, 160, 90)
+                if winner_side == "left":
+                    draw.ellipse((left_x - 54, stat_y - 22, left_x + 54, stat_y + 34), fill=glow_color)
+                elif winner_side == "right":
+                    draw.ellipse((right_x - 54, stat_y - 22, right_x + 54, stat_y + 34), fill=glow_color)
 
             check_phase = 1.0 if revealed else max(0.0, min(1.0, (phase - 0.56) / 0.34))
             if check_phase > 0 and winner_side != "tie":
@@ -528,7 +569,7 @@ def render_video(output_path: Path, audio_path: Path, duration: float, fps: int)
         for row in STAT_ROWS
         for value in (row[1], row[2])
     }
-    narration_temp = _synthesize_voiceover(_build_narration_text())
+    narration_temp = _synthesize_voiceover(_build_short_narration_text())
 
     def scene_at(t: float) -> tuple[dict, float]:
         elapsed = 0.0
@@ -550,8 +591,25 @@ def render_video(output_path: Path, audio_path: Path, duration: float, fps: int)
         gd.ellipse((WIDTH - 480, 360, WIDTH + 80, 1160), fill=(*NADAL_ORANGE, 42))
         glow = glow.filter(ImageFilter.GaussianBlur(radius=34))
         frame.alpha_composite(glow)
+        if t < 1.15:
+            hook_phase = _ease_out(t / 1.15)
+            hook_layer = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
+            hd = ImageDraw.Draw(hook_layer, "RGBA")
+            hook_font = _fit_font_size(hd, "NADAL EST INJOUABLE ICI", 860, 56, 22, bold=True)
+            hd.text((WIDTH // 2, 56), "NADAL EST INJOUABLE ICI", font=hook_font, fill=(255, 244, 220, int(255 * hook_phase)), anchor="ma", stroke_width=3, stroke_fill=(0, 0, 0, int(180 * hook_phase)))
+            hd.text((WIDTH // 2, 88), "FEDERER VS NADAL", font=_load_font(20, bold=True), fill=(220, 229, 239, int(210 * hook_phase)), anchor="ma")
+            frame.alpha_composite(hook_layer)
         _draw_center_stat_scene(frame, side_name_font, stat_list_font, value_font_map, scene.get("index"), phase)
-        _draw_presenter_overlay(frame, t, narration_temp is not None and t < duration - 0.6, presenter_title_font, presenter_sub_font)
+        zoom = 1.0 + (0.014 * np.sin(t * 0.85)) + (0.018 if scene["kind"] == "board_final" else 0.0) * phase
+        if zoom > 1.0005:
+            zoom_w = int(WIDTH * zoom)
+            zoom_h = int(HEIGHT * zoom)
+            zoomed = frame.resize((zoom_w, zoom_h), Image.Resampling.LANCZOS)
+            pan_x = int((zoom_w - WIDTH) * (0.5 + 0.03 * np.sin(t * 0.6)))
+            pan_y = int((zoom_h - HEIGHT) * (0.5 + 0.025 * np.cos(t * 0.7)))
+            pan_x = max(0, min(pan_x, zoom_w - WIDTH))
+            pan_y = max(0, min(pan_y, zoom_h - HEIGHT))
+            frame = zoomed.crop((pan_x, pan_y, pan_x + WIDTH, pan_y + HEIGHT))
         return np.array(frame.convert("RGB"))
 
     clip = VideoClip(make_frame, duration=duration)

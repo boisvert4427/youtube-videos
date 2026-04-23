@@ -67,7 +67,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 DEFAULT_OUTPUT_STEM = "mvp_race_shorts_manim"
 DEFAULT_MEDIA_DIR = PROJECT_ROOT / "data" / "processed" / "basketball" / "manim_mvp_race"
 DEFAULT_ASSETS_DIR = PROJECT_ROOT / "data" / "raw" / "mvp_race_assets"
-DEFAULT_AUDIO = PROJECT_ROOT / "data" / "raw" / "audio" / "audio.mp3"
+DEFAULT_AUDIO = PROJECT_ROOT / "data" / "raw" / "audio" / "Midnight_Grip_20260402_0828.mp3"
 DEFAULT_REQUIREMENTS = PROJECT_ROOT / "requirements-manim-mvp-race.txt"
 
 RENDER_WIDTH = 1080
@@ -92,6 +92,7 @@ class PlayerData:
     short_name: str
     color: str
     secondary_color: str
+    team_record: str
     points: float
     assists: float
     rebounds: float
@@ -123,12 +124,25 @@ class TimingConfig:
         return self.hook + self.intro + self.stats + self.score + self.podium + self.cta
 
 
+@dataclass(frozen=True)
+class StatLaneSpec:
+    player: PlayerData
+    stat: StatSpec
+    value_anchor_x: float
+    value_anchor_y: float
+    bar_left_x: float
+    bar_y: float
+    bar_max_width: float
+    max_value: float
+
+
 PLAYERS = [
     PlayerData(
         name="Nikola Jokic",
         short_name="JOKIC",
         color="#FDB927",
         secondary_color="#0E2240",
+        team_record="59-23",
         points=29.0,
         assists=10.2,
         rebounds=12.8,
@@ -141,6 +155,7 @@ PLAYERS = [
         short_name="SGA",
         color="#007AC1",
         secondary_color="#EF3B24",
+        team_record="50-32",
         points=31.1,
         assists=6.1,
         rebounds=5.5,
@@ -153,6 +168,7 @@ PLAYERS = [
         short_name="DONCIC",
         color="#00538C",
         secondary_color="#B8C4CA",
+        team_record="55-27",
         points=33.7,
         assists=9.8,
         rebounds=9.1,
@@ -219,9 +235,77 @@ class MVPRaceBase(Scene):  # type: ignore[misc]
         blue_orb = Square(4.8, stroke_width=0, fill_color="#1F6BFF", fill_opacity=0.18).move_to(LEFT * 2.6 + UP * 1.9)
         red_orb = Square(5.2, stroke_width=0, fill_color="#FF5B45", fill_opacity=0.18).move_to(RIGHT * 2.5 + UP * 1.2)
         gold_orb = Square(3.6, stroke_width=0, fill_color="#FFD46C", fill_opacity=0.08).move_to(DOWN * 2.5)
+        left_haze = RoundedRectangle(
+            width=4.2,
+            height=13.5,
+            corner_radius=0.35,
+            fill_color="#16345E",
+            fill_opacity=0.12,
+            stroke_width=0,
+        ).move_to(LEFT * 2.6 + DOWN * 0.25)
+        right_haze = RoundedRectangle(
+            width=4.2,
+            height=13.5,
+            corner_radius=0.35,
+            fill_color="#5A1D1C",
+            fill_opacity=0.12,
+            stroke_width=0,
+        ).move_to(RIGHT * 2.6 + DOWN * 0.25)
+        center_glow = RoundedRectangle(
+            width=3.5,
+            height=9.8,
+            corner_radius=0.3,
+            fill_color="#FFD46C",
+            fill_opacity=0.03,
+            stroke_width=0,
+        ).move_to(DOWN * 0.4)
+        vignette_top = RoundedRectangle(
+            width=9.4,
+            height=2.2,
+            corner_radius=0.2,
+            fill_color=BLACK,
+            fill_opacity=0.24,
+            stroke_width=0,
+        ).move_to(UP * 6.95)
+        vignette_bottom = RoundedRectangle(
+            width=9.4,
+            height=2.8,
+            corner_radius=0.2,
+            fill_color=BLACK,
+            fill_opacity=0.28,
+            stroke_width=0,
+        ).move_to(DOWN * 6.9)
+        streak_left = RoundedRectangle(
+            width=0.06,
+            height=11.6,
+            corner_radius=0.03,
+            fill_color="#3E7DFF",
+            fill_opacity=0.16,
+            stroke_width=0,
+        ).move_to(LEFT * 3.95 + DOWN * 0.3)
+        streak_right = RoundedRectangle(
+            width=0.06,
+            height=11.6,
+            corner_radius=0.03,
+            fill_color="#FF6A52",
+            fill_opacity=0.16,
+            stroke_width=0,
+        ).move_to(RIGHT * 3.95 + DOWN * 0.3)
         for mob in (blue_orb, red_orb, gold_orb):
             mob.rotate(math.radians(45))
-        return VGroup(background, blue_orb, red_orb, gold_orb)
+        return VGroup(
+            background,
+            left_haze,
+            right_haze,
+            center_glow,
+            blue_orb,
+            red_orb,
+            gold_orb,
+            streak_left,
+            streak_right,
+            vignette_top,
+            vignette_bottom,
+        )
 
     def glow_text(self, text: str, size: int, color=WHITE, glow_color=None, weight="BOLD") -> VGroup:
         glow_color = glow_color or color
@@ -230,25 +314,41 @@ class MVPRaceBase(Scene):  # type: ignore[misc]
         glow.scale(1.03)
         return VGroup(glow, core)
 
-    def make_player_card(self, player: PlayerData, width: float = 2.55, height: float = 1.5) -> VGroup:
+    def make_player_card(self, player: PlayerData, width: float = 2.55, height: float = 1.5) -> Group:
         panel = RoundedRectangle(
             width=width,
             height=height,
             corner_radius=0.22,
             fill_color=player.secondary_color,
-            fill_opacity=0.88,
+            fill_opacity=0.94,
             stroke_color=player.color,
-            stroke_opacity=0.9,
-            stroke_width=2,
+            stroke_opacity=0.95,
+            stroke_width=2.2,
         )
+        glow = RoundedRectangle(
+            width=width + 0.16,
+            height=height + 0.16,
+            corner_radius=0.28,
+            fill_color=player.color,
+            fill_opacity=0.08,
+            stroke_width=0,
+        )
+        accent = RoundedRectangle(
+            width=width - 0.2,
+            height=0.14,
+            corner_radius=0.07,
+            fill_color=player.color,
+            fill_opacity=0.9,
+            stroke_width=0,
+        ).move_to(panel.get_top() + DOWN * 0.18)
         image_path = resolve_asset(player.image, self.assets_dir)
         if image_path is not None:
-            portrait: Mobject = ImageMobject(str(image_path)).scale_to_fit_height(height - 0.22)
-            portrait.set_x(panel.get_left()[0] + 0.66)
+            portrait: Mobject = ImageMobject(str(image_path)).scale_to_fit_height(height - 0.18)
+            portrait.move_to(panel.get_center() + LEFT * 0.68 + UP * 0.04)
         else:
             portrait = RoundedRectangle(
-                width=0.95,
-                height=0.95,
+                width=1.25,
+                height=height - 0.28,
                 corner_radius=0.48,
                 fill_color=player.color,
                 fill_opacity=0.95,
@@ -256,42 +356,61 @@ class MVPRaceBase(Scene):  # type: ignore[misc]
             )
             initials = Text(player.short_name[:2], font_size=28, weight="BOLD", color=BLACK).move_to(portrait)
             portrait = VGroup(portrait, initials)
-            portrait.set_x(panel.get_left()[0] + 0.66)
-        name = Text(player.short_name, font_size=24, weight="BOLD", color=WHITE).move_to(panel.get_center() + RIGHT * 0.32 + UP * 0.12)
-        subtitle = Text("MVP CANDIDATE", font_size=12, weight="BOLD", color=GRAY_B).move_to(panel.get_center() + RIGHT * 0.38 + DOWN * 0.28)
-        return VGroup(panel, portrait, name, subtitle)
+            portrait.move_to(panel.get_center() + LEFT * 0.68 + UP * 0.04)
+        info_box = RoundedRectangle(
+            width=width * 0.48,
+            height=height - 0.34,
+            corner_radius=0.18,
+            fill_color=BLACK,
+            fill_opacity=0.24,
+            stroke_width=0,
+        ).move_to(panel.get_center() + RIGHT * 0.82)
+        name = Text(player.short_name, font_size=25, weight="BOLD", color=WHITE).move_to(info_box.get_center() + UP * 0.34)
+        subtitle = Text("MVP CANDIDATE", font_size=11, weight="BOLD", color=GRAY_B).move_to(info_box.get_center() + UP * 0.04)
+        record_chip = RoundedRectangle(
+            width=width * 0.42,
+            height=0.38,
+            corner_radius=0.14,
+            fill_color=player.color,
+            fill_opacity=0.18,
+            stroke_color=player.color,
+            stroke_opacity=0.75,
+            stroke_width=1.2,
+        ).move_to(info_box.get_center() + DOWN * 0.36)
+        record_text = Text(f"TEAM {player.team_record}", font_size=12, weight="BOLD", color=WHITE).move_to(record_chip)
+        return Group(glow, panel, accent, portrait, info_box, name, subtitle, record_chip, record_text)
 
     def make_stat_row(self, label: str) -> VGroup:
         row = RoundedRectangle(
-            width=7.6,
-            height=1.45,
-            corner_radius=0.24,
-            fill_color="#122034",
-            fill_opacity=0.84,
-            stroke_color="#355784",
-            stroke_opacity=0.45,
-            stroke_width=1.8,
+            width=8.15,
+            height=2.28,
+            corner_radius=0.28,
+            fill_color="#101A29",
+            fill_opacity=0.92,
+            stroke_color="#4D6E95",
+            stroke_opacity=0.42,
+            stroke_width=1.6,
         )
-        track = RoundedRectangle(
-            width=5.25,
-            height=0.26,
-            corner_radius=0.13,
-            fill_color="#DCE4F0",
-            fill_opacity=0.12,
+        glass = RoundedRectangle(
+            width=7.95,
+            height=2.08,
+            corner_radius=0.24,
+            fill_color=WHITE,
+            fill_opacity=0.02,
             stroke_width=0,
-        ).move_to(row.get_center() + DOWN * 0.2)
+        ).move_to(row)
         label_box = RoundedRectangle(
-            width=2.7,
-            height=0.48,
+            width=3.35,
+            height=0.5,
             corner_radius=0.18,
             fill_color="#F0D49A",
             fill_opacity=0.98,
             stroke_width=0,
-        ).move_to(row.get_center() + UP * 0.14)
-        label_text = Text(label, font_size=20, weight="BOLD", color=BLACK).move_to(label_box)
-        return VGroup(row, track, label_box, label_text)
+        ).move_to(row.get_top() + DOWN * 0.35)
+        label_text = Text(label, font_size=19, weight="BOLD", color=BLACK).move_to(label_box)
+        return VGroup(row, glass, label_box, label_text)
 
-    def make_score_bar(self, player: PlayerData, height: float) -> VGroup:
+    def make_score_bar(self, player: PlayerData, height: float) -> Group:
         lane = RoundedRectangle(
             width=1.45,
             height=height + 1.2,
@@ -309,7 +428,7 @@ class MVPRaceBase(Scene):  # type: ignore[misc]
         else:
             portrait = Text(player.short_name[:2], font_size=22, weight="BOLD", color=WHITE)
         portrait.move_to(lane.get_top() + DOWN * 0.52)
-        return VGroup(lane, track, portrait)
+        return Group(lane, track, portrait)
 
     def make_crown(self, color=GOLD) -> VGroup:
         left = Line(LEFT * 0.46 + DOWN * 0.18, LEFT * 0.18 + UP * 0.24, color=color, stroke_width=8)
@@ -321,64 +440,106 @@ class MVPRaceBase(Scene):  # type: ignore[misc]
         return VGroup(left, middle_left, spike, middle_right, right, base)
 
     def build_hook(self) -> VGroup:
-        title = self.glow_text("IF MVP WAS", 38, WHITE, GOLD).move_to(UP * 2.6)
-        subtitle = self.glow_text("DECIDED TODAY...", 38, GOLD, GOLD).next_to(title, DOWN, buff=0.28)
-        kicker = self.glow_text("THIS IS THE RACE", 18, GRAY_B, BLUE).next_to(subtitle, DOWN, buff=0.42)
-        underline = Line(LEFT * 2.8, RIGHT * 2.8, stroke_width=4, color=GOLD).next_to(kicker, DOWN, buff=0.35)
-        return VGroup(title, subtitle, kicker, underline)
+        tag = RoundedRectangle(
+            width=2.2,
+            height=0.46,
+            corner_radius=0.16,
+            fill_color="#F0D49A",
+            fill_opacity=0.96,
+            stroke_width=0,
+        ).move_to(UP * 3.75)
+        tag_text = Text("NBA MVP", font_size=18, weight="BOLD", color=BLACK).move_to(tag)
+        title = self.glow_text("IF MVP WAS", 44, WHITE, GOLD).move_to(UP * 2.85)
+        subtitle = self.glow_text("DECIDED TODAY...", 44, GOLD, GOLD).next_to(title, DOWN, buff=0.26)
+        kicker = self.glow_text("THIS IS THE RACE", 20, GRAY_B, BLUE).next_to(subtitle, DOWN, buff=0.46)
+        underline = Line(LEFT * 3.0, RIGHT * 3.0, stroke_width=5, color=GOLD).next_to(kicker, DOWN, buff=0.34)
+        flare = RoundedRectangle(
+            width=3.6,
+            height=0.14,
+            corner_radius=0.07,
+            fill_color=WHITE,
+            fill_opacity=0.16,
+            stroke_width=0,
+        ).move_to(subtitle.get_center() + DOWN * 0.55)
+        return VGroup(tag, tag_text, title, subtitle, kicker, underline, flare)
 
-    def build_intro_group(self) -> VGroup:
+    def build_intro_group(self) -> Group:
         title = self.glow_text("TOP 3 RIGHT NOW", 26, WHITE, GOLD).move_to(UP * 4.45)
-        cards = VGroup(
-            self.make_player_card(self.players[0]).move_to(UP * 2.7),
-            self.make_player_card(self.players[1]).move_to(ORIGIN + UP * 0.65),
-            self.make_player_card(self.players[2]).move_to(DOWN * 1.4),
+        cards = Group(
+            self.make_player_card(self.players[0], width=4.95, height=2.2).move_to(UP * 2.55),
+            self.make_player_card(self.players[1], width=4.95, height=2.2).move_to(ORIGIN + UP * 0.15),
+            self.make_player_card(self.players[2], width=4.95, height=2.2).move_to(DOWN * 2.25),
         )
-        return VGroup(title, cards)
+        return Group(title, cards)
 
-    def build_stats_scene(self) -> tuple[VGroup, list[tuple[Text, VMobject, PlayerData, StatSpec]]]:
+    def build_stats_scene(self) -> tuple[VGroup, list[list[StatLaneSpec]]]:
         title = self.glow_text("STAT BATTLE", 28, WHITE, GOLD).move_to(UP * 4.55)
         rows = VGroup()
-        animated: list[tuple[Text, VMobject, PlayerData, StatSpec]] = []
-        ys = [2.35, 0.8, -0.75, -2.3]
+        animated: list[list[StatLaneSpec]] = []
+        ys = [2.55, 0.85, -0.85, -2.55]
         for stat, y in zip(self.stats, ys):
             row = self.make_stat_row(stat.label).move_to(UP * y)
             values = [getattr(player, stat.key) * (100 if stat.key == "team_win_pct" else 1) for player in self.players]
             max_val = max(values) if max(values) else 1
-            left_x = row[1].get_left()[0]
+            lane_specs: list[StatLaneSpec] = []
+            lane_ys = [0.42, 0.0, -0.42]
             for index, player in enumerate(self.players):
-                bar_color = player.color
-                width = 5.1 * (values[index] / max_val)
-                bar = RoundedRectangle(
-                    width=max(0.05, width),
-                    height=0.22,
-                    corner_radius=0.11,
-                    fill_color=bar_color,
-                    fill_opacity=0.95,
+                lane_y = row.get_center()[1] + lane_ys[index]
+                lane_left_x = row.get_left()[0] + 1.5
+                lane_width = 5.5
+                lane_track = RoundedRectangle(
+                    width=lane_width,
+                    height=0.18,
+                    corner_radius=0.09,
+                    fill_color=WHITE,
+                    fill_opacity=0.08,
                     stroke_width=0,
+                ).move_to([lane_left_x + lane_width / 2, lane_y, 0])
+                value_chip = RoundedRectangle(
+                    width=0.98,
+                    height=0.42,
+                    corner_radius=0.16,
+                    fill_color="#0B1018",
+                    fill_opacity=0.96,
+                    stroke_color=player.color,
+                    stroke_opacity=0.85,
+                    stroke_width=1.4,
+                ).move_to([row.get_right()[0] - 0.72, lane_y, 0])
+                tag_chip = RoundedRectangle(
+                    width=1.2,
+                    height=0.42,
+                    corner_radius=0.16,
+                    fill_color=player.secondary_color,
+                    fill_opacity=0.98,
+                    stroke_color=player.color,
+                    stroke_opacity=0.9,
+                    stroke_width=1.4,
+                ).move_to([row.get_left()[0] + 0.82, lane_y, 0])
+                tag = Text(player.short_name, font_size=14, weight="BOLD", color=WHITE).move_to(tag_chip)
+                row.add(lane_track, value_chip, tag_chip, tag)
+                lane_specs.append(
+                    StatLaneSpec(
+                        player=player,
+                        stat=stat,
+                        value_anchor_x=value_chip.get_center()[0],
+                        value_anchor_y=value_chip.get_center()[1],
+                        bar_left_x=lane_left_x,
+                        bar_y=lane_y,
+                        bar_max_width=lane_width,
+                        max_value=max_val,
+                    )
                 )
-                bar.align_to(row[1], LEFT)
-                bar.shift(RIGHT * (width / 2))
-                if index == 1:
-                    bar.next_to(row[1], DOWN, buff=0.18)
-                elif index == 2:
-                    bar.next_to(row[1], DOWN, buff=0.48)
-                else:
-                    bar.next_to(row[1], DOWN, buff=-0.12)
-                value = Text("0" if stat.decimals == 0 else "0.0", font_size=22, weight="BOLD", color=WHITE)
-                value.next_to(bar, RIGHT, buff=0.16)
-                tag = Text(player.short_name, font_size=12, weight="BOLD", color=GRAY_C).next_to(bar, LEFT, buff=0.16)
-                row.add(bar, value, tag)
-                animated.append((value, bar, player, stat))
             rows.add(row)
+            animated.append(lane_specs)
         return VGroup(title, rows), animated
 
     def build_score_group(self) -> tuple[VGroup, list[tuple[Text, VMobject, PlayerData]]]:
         title = self.glow_text("FINAL MVP SCORE", 30, WHITE, GOLD).move_to(UP * 4.45)
-        bars = VGroup()
+        bars = Group()
         animated: list[tuple[Text, VMobject, PlayerData]] = []
+        bar_height = 4.5
         for x, player in zip([-2.35, 0, 2.35], sorted(self.players, key=lambda item: item.score, reverse=True)):
-            column = self.make_score_bar(player, 4.5).move_to(DOWN * 0.5 + RIGHT * x)
+            column = self.make_score_bar(player, bar_height).move_to(DOWN * 0.5 + RIGHT * x)
             fill = RoundedRectangle(
                 width=0.42,
                 height=max(0.1, 4.3 * (player.score / 100)),
@@ -390,11 +551,29 @@ class MVPRaceBase(Scene):  # type: ignore[misc]
             fill.align_to(column[1], DOWN)
             score = Text("0", font_size=28, weight="BOLD", color=WHITE).next_to(column[0], DOWN, buff=0.24)
             name = Text(player.short_name, font_size=16, weight="BOLD", color=GRAY_B).next_to(score, DOWN, buff=0.12)
-            crown = self.make_crown().scale(0.72).next_to(column[0], UP, buff=0.22) if player.score == max(item.score for item in self.players) else VGroup()
-            column.add(fill, score, name, crown)
+            score_chip = RoundedRectangle(
+                width=1.02,
+                height=0.48,
+                corner_radius=0.16,
+                fill_color="#0E1520",
+                fill_opacity=0.96,
+                stroke_color=player.color,
+                stroke_opacity=0.8,
+                stroke_width=1.2,
+            ).move_to(score)
+            leader_glow = RoundedRectangle(
+                width=1.72,
+                height=bar_height + 1.44,
+                corner_radius=0.28,
+                fill_color=player.color,
+                fill_opacity=0.08 if player.score == max(item.score for item in self.players) else 0.03,
+                stroke_width=0,
+            ).move_to(column[0])
+            crown = self.make_crown().scale(0.82).next_to(column[0], UP, buff=0.18) if player.score == max(item.score for item in self.players) else VGroup()
+            column.add(leader_glow, fill, score_chip, score, name, crown)
             bars.add(column)
             animated.append((score, fill, player))
-        return VGroup(title, bars), animated
+        return Group(title, bars), animated
 
     def build_podium_group(self) -> VGroup:
         title = self.glow_text("THE PODIUM", 30, WHITE, GOLD).move_to(UP * 4.45)
@@ -406,6 +585,14 @@ class MVPRaceBase(Scene):  # type: ignore[misc]
         ]
         blocks = VGroup()
         for player, x, y, height, medal_color, rank in specs:
+            glow = RoundedRectangle(
+                width=2.06,
+                height=height + 0.26,
+                corner_radius=0.28,
+                fill_color=medal_color,
+                fill_opacity=0.08,
+                stroke_width=0,
+            ).move_to(RIGHT * x + UP * y)
             block = RoundedRectangle(
                 width=1.8,
                 height=height,
@@ -416,16 +603,93 @@ class MVPRaceBase(Scene):  # type: ignore[misc]
                 stroke_opacity=1,
                 stroke_width=2.2,
             ).move_to(RIGHT * x + UP * y)
+            top_plate = RoundedRectangle(
+                width=1.54,
+                height=0.16,
+                corner_radius=0.08,
+                fill_color=medal_color,
+                fill_opacity=0.96,
+                stroke_width=0,
+            ).move_to(block.get_top() + DOWN * 0.18)
             label = Text(rank, font_size=34, weight="BOLD", color=medal_color).next_to(block.get_top(), DOWN, buff=0.28)
             name = Text(player.short_name, font_size=18, weight="BOLD", color=WHITE).move_to(block.get_center() + DOWN * 0.35)
             score = Text(str(player.score), font_size=30, weight="BOLD", color=player.color).move_to(block.get_center() + DOWN * 0.8)
-            blocks.add(VGroup(block, label, name, score))
+            blocks.add(VGroup(glow, block, top_plate, label, name, score))
         return VGroup(title, blocks)
 
     def build_cta_group(self) -> VGroup:
-        title = self.glow_text("DO YOU AGREE?", 40, WHITE, GOLD).move_to(UP * 0.8)
-        subtitle = self.glow_text("COMMENT BELOW", 20, GOLD, RED).next_to(title, DOWN, buff=0.4)
-        return VGroup(title, subtitle)
+        card = RoundedRectangle(
+            width=7.6,
+            height=2.5,
+            corner_radius=0.32,
+            fill_color="#101822",
+            fill_opacity=0.9,
+            stroke_color="#DAB26B",
+            stroke_opacity=0.65,
+            stroke_width=1.8,
+        ).move_to(DOWN * 0.1)
+        top_line = RoundedRectangle(
+            width=6.8,
+            height=0.12,
+            corner_radius=0.06,
+            fill_color=GOLD,
+            fill_opacity=0.92,
+            stroke_width=0,
+        ).move_to(card.get_top() + DOWN * 0.24)
+        title = self.glow_text("DO YOU AGREE?", 42, WHITE, GOLD).move_to(card.get_center() + UP * 0.28)
+        subtitle = self.glow_text("COMMENT BELOW", 22, GOLD, RED).move_to(card.get_center() + DOWN * 0.48)
+        return VGroup(card, top_line, title, subtitle)
+
+    def make_stat_lane_mobjects(self, lane: StatLaneSpec, tracker: ValueTracker) -> tuple[VGroup, Mobject]:
+        value_scale = 100 if lane.stat.key == "team_win_pct" else 1
+        bar_height = 0.22
+
+        def _current_value() -> float:
+            raw = tracker.get_value()
+            return raw / 100 if lane.stat.key == "team_win_pct" else raw
+
+        bar = always_redraw(
+            lambda l=lane: RoundedRectangle(
+                width=max(0.08, l.bar_max_width * (tracker.get_value() / max(1e-6, l.max_value))),
+                height=bar_height,
+                corner_radius=0.11,
+                fill_color=l.player.color,
+                fill_opacity=0.98,
+                stroke_width=0,
+            ).move_to(
+                [
+                    l.bar_left_x + max(0.08, l.bar_max_width * (tracker.get_value() / max(1e-6, l.max_value))) / 2,
+                    l.bar_y,
+                    0,
+                ]
+            )
+        )
+        shine = always_redraw(
+            lambda l=lane: RoundedRectangle(
+                width=max(0.08, l.bar_max_width * (tracker.get_value() / max(1e-6, l.max_value))) * 0.42,
+                height=0.08,
+                corner_radius=0.04,
+                fill_color=WHITE,
+                fill_opacity=0.18,
+                stroke_width=0,
+            ).move_to(
+                [
+                    l.bar_left_x
+                    + max(0.08, l.bar_max_width * (tracker.get_value() / max(1e-6, l.max_value))) * 0.7,
+                    l.bar_y + 0.03,
+                    0,
+                ]
+            )
+        )
+        value = always_redraw(
+            lambda l=lane: Text(
+                format_stat_text(l.stat, _current_value()),
+                font_size=17,
+                weight="BOLD",
+                color=WHITE,
+            ).move_to([l.value_anchor_x, l.value_anchor_y, 0])
+        )
+        return VGroup(bar, shine), value
 
 
 class HookScene(MVPRaceBase):
@@ -451,22 +715,22 @@ class StatsBarsScene(MVPRaceBase):
         group, animated = self.build_stats_scene()
         self.play(FadeIn(group[0], shift=UP * 0.2), FadeIn(group[1], shift=DOWN * 0.12), run_time=0.7)
         step = self.timings.stats / len(self.stats)
-        for stat_index, stat in enumerate(self.stats):
-            related = [item for item in animated if item[3] == stat]
-            trackers = [ValueTracker(0) for _ in related]
-            for tracker, (number, _bar, player, spec) in zip(trackers, related):
-                target = getattr(player, spec.key) * (100 if spec.key == "team_win_pct" else 1)
-                replacement = always_redraw(
-                    lambda tr=tracker, sp=spec, mob=number: Text(
-                        format_stat_text(sp, tr.get_value() if sp.key != "team_win_pct" else tr.get_value() / 100),
-                        font_size=22,
-                        weight="BOLD",
-                        color=WHITE,
-                    ).move_to(mob)
-                )
-                self.add(replacement)
-                self.play(tracker.animate.set_value(target), run_time=step * 0.72)
-                self.remove(replacement)
+        for lane_group in animated:
+            trackers = [ValueTracker(0) for _ in lane_group]
+            lane_mobs: list[VGroup] = []
+            value_mobs: list[Mobject] = []
+            for tracker, lane in zip(trackers, lane_group):
+                bars, value = self.make_stat_lane_mobjects(lane, tracker)
+                lane_mobs.append(bars)
+                value_mobs.append(value)
+                self.add(bars, value)
+            self.play(
+                *[
+                    tracker.animate.set_value(getattr(lane.player, lane.stat.key) * (100 if lane.stat.key == "team_win_pct" else 1))
+                    for tracker, lane in zip(trackers, lane_group)
+                ],
+                run_time=step * 0.76,
+            )
         self.wait(0.1)
 
 
@@ -526,31 +790,22 @@ class MVPRaceShort(MVPRaceBase):
         stats_group, animated = self.build_stats_scene()
         self.play(FadeIn(stats_group[0], shift=UP * 0.15), FadeIn(stats_group[1], shift=DOWN * 0.15), run_time=0.45)
         per_stat = self.timings.stats / len(self.stats)
-        for stat in self.stats:
-            stat_items = [item for item in animated if item[3] == stat]
-            trackers = [ValueTracker(0) for _ in stat_items]
-            replacements = []
-            for tracker, (number, _bar, player, spec) in zip(trackers, stat_items):
-                target = getattr(player, spec.key) * (100 if spec.key == "team_win_pct" else 1)
-                replacement = always_redraw(
-                    lambda tr=tracker, sp=spec, mob=number: Text(
-                        format_stat_text(sp, tr.get_value() if sp.key != "team_win_pct" else tr.get_value() / 100),
-                        font_size=22,
-                        weight="BOLD",
-                        color=WHITE,
-                    ).move_to(mob)
-                )
-                replacements.append(replacement)
-                self.add(replacement)
+        for lane_group in animated:
+            trackers = [ValueTracker(0) for _ in lane_group]
+            lane_mobs: list[VGroup] = []
+            value_mobs: list[Mobject] = []
+            for tracker, lane in zip(trackers, lane_group):
+                bars, value = self.make_stat_lane_mobjects(lane, tracker)
+                lane_mobs.append(bars)
+                value_mobs.append(value)
+                self.add(bars, value)
             self.play(
                 *[
-                    tracker.animate.set_value(getattr(player, spec.key) * (100 if spec.key == "team_win_pct" else 1))
-                    for tracker, (_number, _bar, player, spec) in zip(trackers, stat_items)
+                    tracker.animate.set_value(getattr(lane.player, lane.stat.key) * (100 if lane.stat.key == "team_win_pct" else 1))
+                    for tracker, lane in zip(trackers, lane_group)
                 ],
-                run_time=per_stat * 0.72,
+                run_time=per_stat * 0.76,
             )
-            for replacement in replacements:
-                self.remove(replacement)
         self.play(FadeOut(stats_group, shift=DOWN * 0.1), run_time=0.38)
 
         score_group, score_items = self.build_score_group()
