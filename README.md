@@ -70,8 +70,28 @@ Commandes:
    - `python video_generator/generate_cooper_flagg_vs_kon_knueppel_roty_shorts_moviepy.py`
 13. Generer un Short SGA vs Jokic vs Wemby:
    - `python video_generator/generate_sga_jokic_wemby_mvp_short_moviepy.py`
-14. Generer un Short NBA bracket 2022 style TV:
-   - `python video_generator/generate_nba_playoff_bracket_shorts_moviepy.py`
+14. Generer un Short NBA bracket 2025 style TV:
+   - `python video_generator/generate_nba_playoff_bracket_2025_moviepy.py`
+
+## Template NBA Playoff Bracket 2025
+
+Fichiers principaux:
+
+- Script principal: `video_generator/basketball/generate_nba_playoff_bracket_2025_moviepy.py`
+- Wrapper: `video_generator/generate_nba_playoff_bracket_2025_moviepy.py`
+- Sortie finale par defaut: `data/processed/basketball/nba_playoff_bracket_2025_style.mp4`
+
+Comment est faite la video:
+
+- Format vertical `1080x1920`
+- Bracket NBA 2025 en 4 paliers: round 1, semis, conference finals, finals
+- Les logos gagnants glissent de leur seed vers le centre puis vers le titre
+- Les equipes eliminees restent visibles en version assombrie pour conserver le contexte
+- Le style visuel est inspire d'un fond split bleu / rouge avec halo central et trophée
+
+Commandes:
+
+- `python video_generator/generate_nba_playoff_bracket_2025_moviepy.py`
 
 Regles fixes du template Indian Wells (toujours):
 
