@@ -1,5 +1,7 @@
 # youtube-videos
 
+Pour les consignes operatives du projet et les conventions a suivre, voir `agents.md`.
+
 Projet structure en 3 modules:
 
 - `scraper/`: collecte, normalisation, export CSV.
@@ -77,17 +79,26 @@ Commandes:
 
 Fichiers principaux:
 
-- Script principal: `video_generator/basketball/generate_nba_playoff_bracket_2025_moviepy.py`
-- Wrapper: `video_generator/generate_nba_playoff_bracket_2025_moviepy.py`
+- Script principal: `video_generator/generate_nba_playoff_bracket_2025_moviepy.py`
 - Sortie finale par defaut: `data/processed/basketball/nba_playoff_bracket_2025_style.mp4`
+- Le moteur canonique est ce script racine. L'ancien doublon NBA bracket dans `video_generator/basketball/` ne doit pas etre recrree.
+- Assets locaux attendus:
+  - `data/raw/nba_logo.png`
+  - `data/raw/nba_team_logos/orlando_magic.png`
+  - `data/raw/nba_trophy_photo.jpg`
+  - `~/Downloads/bracket_lines_overlay.svg`
 
 Comment est faite la video:
 
 - Format vertical `1080x1920`
-- Bracket NBA 2025 en 4 paliers: round 1, semis, conference finals, finals
-- Les logos gagnants glissent de leur seed vers le centre puis vers le titre
+- Bracket NBA 2025 en 3 paliers visibles: round 1, semis, conference finals
+- Les lignes blanches suivent le trace de reference fourni et se revelent progressivement
+- Le titre utilise le vrai logo NBA en image
+- Le trophee central est la photo NBA incrustee dans le fond avec glow et matte
+- Les logos gagnants glissent de leur seed vers leur place de bracket
 - Les equipes eliminees restent visibles en version assombrie pour conserver le contexte
-- Le style visuel est inspire d'un fond split bleu / rouge avec halo central et trophée
+- Les seeds restent lisibles hors des logos
+- Le style visuel est inspire d'un fond split bleu / rouge avec halo central et ambience cine
 
 Commandes:
 
@@ -290,7 +301,7 @@ Comment est faite la video:
 - Bracket stylise en 3 marches: round 1, semis, finals
 - Les teams gagnantes glissent d'une colonne a l'autre jusqu'au titre
 - Les equipes eliminees restent visibles en mode dim pour garder le contexte du bracket
-- Le champion finit sur une carte dorée au sommet de l'ecran
+- Le champion finit sur une carte doree au sommet de l'ecran
 
 Commandes:
 
