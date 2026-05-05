@@ -45,20 +45,27 @@ du template NBA bracket 2025.
 - Assets locaux attendus:
   - `data/raw/nba_logo.png`
   - `data/raw/nba_team_logos/orlando_magic.png`
-  - `data/raw/nba_trophy_photo.jpg`
+  - `data/raw/nba_trophy_photo_alt.png`
   - `~/Downloads/bracket_lines_overlay.svg`
 
 ### Objectif Visuel
 
 - Rendu premium, type trailer / broadcast haut de gamme.
-- Titre compose avec le vrai logo NBA.
+- Export encode en definition renforcee pour garder les lignes, les logos et les chiffres nets.
+- Les seeds et les affiches suivent le bracket 2025 reel, pas un arbre generique.
+- Titre compose avec le vrai logo NBA en couleur.
 - `PLAYOFFS 2025` doit rester lisible et ne pas chevaucher le badge.
-- Trophee central prefere en photo reelle, pas en icone plate.
-- Lignes du bracket animees a partir du trace SVG.
+- Trophee central prefere en image decoupee propre (PNG) sans fond visible, avec glow.
+- Les score badges doivent rester jaune vif, etre plus grands, et afficher des chiffres agrandis pour rester lisibles sur mobile.
+- Lignes du bracket visibles des le debut, avec le centre du bracket deja raccorde au titre.
+- Le fond doit lire comme un split bleu / rouge premium avec halo central et ambience cine.
 - Les segments jaunes parasites au centre-bas doivent rester supprimes.
 - Les logos doivent etre entiers, non coupes, et plus grands si possible.
 - Les seeds doivent rester a l'exterieur des logos pour rester lisibles.
 - Les vainqueurs doivent garder des score badges lisibles.
+- Les scores des finales de conference sont redessines au-dessus de la finale pour rester visibles jusqu'au bout.
+- La timeline est etiree pour que le dernier plan tienne seulement les 5 dernieres secondes.
+- Audio de fond par defaut: `data/raw/audio/Midnight_Grip_20260402_0828.mp3`
 
 ### Points Sensibles
 

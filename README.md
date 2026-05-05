@@ -85,20 +85,26 @@ Fichiers principaux:
 - Assets locaux attendus:
   - `data/raw/nba_logo.png`
   - `data/raw/nba_team_logos/orlando_magic.png`
-  - `data/raw/nba_trophy_photo.jpg`
+  - `data/raw/nba_trophy_photo_alt.png`
   - `~/Downloads/bracket_lines_overlay.svg`
 
 Comment est faite la video:
 
 - Format vertical `1080x1920`
+- Export encode avec un leger sharpen et une compression plus douce pour garder le texte net
+- Les seeds et affichés suivent l'ordre reel du bracket 2025: 1/8, 4/5, 3/6, 2/7
 - Bracket NBA 2025 en 3 paliers visibles: round 1, semis, conference finals
-- Les lignes blanches suivent le trace de reference fourni et se revelent progressivement
-- Le titre utilise le vrai logo NBA en image
-- Le trophee central est la photo NBA incrustee dans le fond avec glow et matte
+- Les lignes blanches sont visibles des le debut, avec le centre du bracket deja raccorde au titre
+- Le titre utilise le vrai logo NBA en couleur
+- Le trophee central utilise la nouvelle image PNG du trophée sans fond visible, avec glow et matte
+- Les score badges sont jaune vif, plus grands, avec des chiffres agrandis pour rester lisibles sur mobile
 - Les logos gagnants glissent de leur seed vers leur place de bracket
 - Les equipes eliminees restent visibles en version assombrie pour conserver le contexte
 - Les seeds restent lisibles hors des logos
+- Les scores des finales de conference sont redessines au-dessus de la finale pour rester lisibles
+- La timeline est etiree pour que le dernier plan tienne seulement les 5 dernieres secondes
 - Le style visuel est inspire d'un fond split bleu / rouge avec halo central et ambience cine
+- Audio de fond par defaut: `data/raw/audio/Midnight_Grip_20260402_0828.mp3`
 
 Commandes:
 

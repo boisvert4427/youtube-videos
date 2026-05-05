@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import deque
 import math
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
@@ -14,37 +15,44 @@ from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUTPUT = PROJECT_ROOT / "data" / "processed" / "basketball" / "nba_playoff_bracket_2025_style.mp4"
-DEFAULT_AUDIO = PROJECT_ROOT / "data" / "raw" / "audio" / "audio.mp3"
+DEFAULT_AUDIO = PROJECT_ROOT / "data" / "raw" / "audio" / "Midnight_Grip_20260402_0828.mp3"
 LOGO_DIR = PROJECT_ROOT / "data" / "raw" / "nba_team_logos"
 NBA_LOGO_PATH = PROJECT_ROOT / "data" / "raw" / "nba_logo.png"
-TROPHY_PHOTO_PATH = PROJECT_ROOT / "data" / "raw" / "nba_trophy_photo.jpg"
+TROPHY_PHOTO_PATH = PROJECT_ROOT / "data" / "raw" / "nba_trophy_photo_alt.png"
+LEGACY_TROPHY_PHOTO_PATH = PROJECT_ROOT / "data" / "raw" / "nba_trophy_photo.jpg"
 BRACKET_SVG = Path.home() / "Downloads" / "bracket_lines_overlay.svg"
 
 WIDTH = 1080
 HEIGHT = 1920
 FPS = 30
-TOTAL_DURATION = 24.0
+TOTAL_DURATION = 40.0
+TIMELINE_SCALE = 2.2
+TEAM_TIMELINE_OFFSET = 1.05
+FINAL_STAGE_RAW_BASE = 16.7045
+EXPORT_CRF = 16
+EXPORT_PRESET = "slow"
+EXPORT_SHARPEN = ImageFilter.UnsharpMask(radius=1.1, percent=90, threshold=2)
 
 LEFT_TEAMS = [
     ("Cleveland Cavaliers", 1, "CLE"),
     ("Miami Heat", 8, "MIA"),
-    ("Boston Celtics", 4, "BOS"),
-    ("Orlando Magic", 5, "ORL"),
+    ("Indiana Pacers", 4, "IND"),
+    ("Milwaukee Bucks", 5, "MIL"),
     ("New York Knicks", 3, "NYK"),
     ("Detroit Pistons", 6, "DET"),
-    ("Indiana Pacers", 2, "IND"),
-    ("Milwaukee Bucks", 7, "MIL"),
+    ("Boston Celtics", 2, "BOS"),
+    ("Orlando Magic", 7, "ORL"),
 ]
 
 RIGHT_TEAMS = [
     ("Oklahoma City Thunder", 1, "OKC"),
     ("Memphis Grizzlies", 8, "MEM"),
-    ("Houston Rockets", 4, "HOU"),
-    ("Golden State Warriors", 5, "GSW"),
+    ("Denver Nuggets", 4, "DEN"),
+    ("LA Clippers", 5, "LAC"),
     ("Los Angeles Lakers", 3, "LAL"),
     ("Minnesota Timberwolves", 6, "MIN"),
-    ("Denver Nuggets", 2, "DEN"),
-    ("LA Clippers", 7, "LAC"),
+    ("Houston Rockets", 2, "HOU"),
+    ("Golden State Warriors", 7, "GSW"),
 ]
 
 TEAM_COLORS = {
@@ -70,24 +78,24 @@ TEAM_ABBR = {name: abbr for name, _seed, abbr in LEFT_TEAMS + RIGHT_TEAMS}
 
 ROUND1_WINNERS = [
     "Cleveland Cavaliers",
-    "Boston Celtics",
-    "New York Knicks",
     "Indiana Pacers",
+    "New York Knicks",
+    "Boston Celtics",
     "Oklahoma City Thunder",
-    "Golden State Warriors",
     "Denver Nuggets",
     "Minnesota Timberwolves",
+    "Golden State Warriors",
 ]
 
 SEMI_WINNERS = [
-    "Cleveland Cavaliers",
+    "Indiana Pacers",
     "New York Knicks",
     "Oklahoma City Thunder",
     "Minnesota Timberwolves",
 ]
 
 CONFERENCE_WINNERS = [
-    "New York Knicks",
+    "Indiana Pacers",
     "Oklahoma City Thunder",
 ]
 
@@ -102,14 +110,30 @@ SCORES = {
     ("round1", "Golden State Warriors"): "4-1",
     ("round1", "Denver Nuggets"): "4-2",
     ("round1", "Minnesota Timberwolves"): "4-1",
-    ("semi", "Cleveland Cavaliers"): "4-2",
-    ("semi", "New York Knicks"): "4-3",
-    ("semi", "Oklahoma City Thunder"): "4-1",
-    ("semi", "Minnesota Timberwolves"): "4-2",
-    ("conf", "New York Knicks"): "4-2",
+    ("semi", "Indiana Pacers"): "4-1",
+    ("semi", "New York Knicks"): "4-2",
+    ("semi", "Oklahoma City Thunder"): "4-3",
+    ("semi", "Minnesota Timberwolves"): "4-1",
+    ("conf", "Indiana Pacers"): "4-2",
     ("conf", "Oklahoma City Thunder"): "4-1",
     ("final", CHAMPION): "4-3",
 }
+
+TEAM_STAGE_BASES_RAW = {
+    "round1": 1.05,
+    "semi": 7.05,
+    "conf": 11.35,
+    "final": FINAL_STAGE_RAW_BASE,
+}
+
+STAGE_BASES = {
+    stage: max(0.0, (base - TEAM_TIMELINE_OFFSET) * TIMELINE_SCALE)
+    for stage, base in TEAM_STAGE_BASES_RAW.items()
+}
+
+
+def _scaled_time(seconds: float) -> float:
+    return seconds * TIMELINE_SCALE
 
 SEED_Y = [216, 424, 634, 842, 1054, 1262, 1474, 1680]
 ROUND1_Y = [292, 710, 1136, 1560]
@@ -272,15 +296,64 @@ def _load_nba_logo(size: int) -> Image.Image | None:
     if not NBA_LOGO_PATH.exists():
         return None
     logo = Image.open(NBA_LOGO_PATH).convert("RGBA")
-    return ImageOps.contain(logo, (size, size), method=Image.Resampling.LANCZOS)
+    logo = ImageOps.contain(logo, (size, size), method=Image.Resampling.LANCZOS)
+    return _colorize_nba_logo(logo)
+
+
+def _colorize_nba_logo(logo: Image.Image) -> Image.Image:
+    rgba = logo.convert("RGBA")
+    arr = np.asarray(rgba).astype(np.float32)
+    rgb = arr[:, :, :3]
+    alpha = arr[:, :, 3]
+    visible = alpha > 0
+    if not np.any(visible):
+        return rgba
+
+    # If the asset is already in color, leave it alone.
+    channel_spread = np.std(rgb[visible], axis=1).mean()
+    if channel_spread > 7.5:
+        return rgba
+
+    luminance = rgb.mean(axis=2)
+    white_mask = visible & (luminance >= 240.0)
+    bg_mask = visible & ~white_mask
+    if not np.any(bg_mask):
+        return rgba
+
+    x = np.linspace(0.0, 1.0, rgba.width, dtype=np.float32)[None, :, None]
+    blue = np.array([24.0, 78.0, 189.0], dtype=np.float32)
+    red = np.array([212.0, 43.0, 46.0], dtype=np.float32)
+    gradient = blue * (1.0 - x) + red * x
+    gradient = np.broadcast_to(gradient, rgb.shape)
+
+    shade = 0.90 + 0.10 * (luminance[..., None] / 255.0)
+    rgb[bg_mask] = np.clip(gradient[bg_mask] * shade[bg_mask], 0, 255)
+    rgb[white_mask] = 255.0
+
+    return Image.fromarray(np.dstack([rgb.astype(np.uint8), alpha.astype(np.uint8)]))
 
 
 @lru_cache(maxsize=8)
 def _load_trophy_photo(width: int) -> Image.Image | None:
-    if not TROPHY_PHOTO_PATH.exists():
+    source_path = TROPHY_PHOTO_PATH if TROPHY_PHOTO_PATH.exists() else LEGACY_TROPHY_PHOTO_PATH
+    if not source_path.exists():
         return None
 
-    trophy = Image.open(TROPHY_PHOTO_PATH).convert("RGBA")
+    trophy = Image.open(source_path).convert("RGBA")
+    if source_path == TROPHY_PHOTO_PATH:
+        alpha = trophy.getchannel("A")
+        if alpha.getextrema() == (255, 255):
+            trophy = trophy.copy()
+            trophy.putalpha(_build_trophy_png_mask(trophy))
+        alpha_bbox = trophy.getchannel("A").getbbox()
+        if alpha_bbox and alpha_bbox != (0, 0, trophy.width, trophy.height):
+            trophy = trophy.crop(alpha_bbox)
+        target_height = max(1, int(width * trophy.height / trophy.width))
+        trophy = ImageOps.contain(trophy, (width, target_height), method=Image.Resampling.LANCZOS)
+        trophy = ImageEnhance.Color(trophy).enhance(0.88)
+        trophy = ImageEnhance.Contrast(trophy).enhance(1.04)
+        return trophy
+
     trim = int(trophy.width * 0.14)
     trophy = trophy.crop((trim, 0, trophy.width - trim, trophy.height))
 
@@ -370,13 +443,13 @@ def _build_moves() -> dict[str, list[Move]]:
 
     round1_order = [
         "Cleveland Cavaliers",
-        "Boston Celtics",
-        "New York Knicks",
         "Indiana Pacers",
+        "New York Knicks",
+        "Boston Celtics",
         "Oklahoma City Thunder",
-        "Golden State Warriors",
         "Denver Nuggets",
         "Minnesota Timberwolves",
+        "Golden State Warriors",
     ]
     round1_delay = 0.0
     for team in round1_order:
@@ -388,15 +461,15 @@ def _build_moves() -> dict[str, list[Move]]:
                 start=slot.seed_pos,
                 end=slot.round1_pos,
                 elbow_x=190 if slot.side == "left" else WIDTH - 190,
-                delay=round1_delay,
-                duration=0.68,
+                delay=_scaled_time(round1_delay),
+                duration=_scaled_time(0.68),
                 score=SCORES[("round1", team)],
                 side=slot.side,
             )
         )
         round1_delay += 0.68
 
-    semi_order = ["Cleveland Cavaliers", "New York Knicks", "Oklahoma City Thunder", "Minnesota Timberwolves"]
+    semi_order = ["Indiana Pacers", "New York Knicks", "Oklahoma City Thunder", "Minnesota Timberwolves"]
     semi_delay = 0.0
     for team in semi_order:
         slot = SLOTS[team]
@@ -407,15 +480,15 @@ def _build_moves() -> dict[str, list[Move]]:
                 start=slot.round1_pos,
                 end=slot.semi_pos,
                 elbow_x=300 if slot.side == "left" else WIDTH - 300,
-                delay=semi_delay,
-                duration=0.8,
+                delay=_scaled_time(semi_delay),
+                duration=_scaled_time(0.8),
                 score=SCORES[("semi", team)],
                 side=slot.side,
             )
         )
         semi_delay += 0.78
 
-    conf_order = ["New York Knicks", "Oklahoma City Thunder"]
+    conf_order = ["Indiana Pacers", "Oklahoma City Thunder"]
     conf_delay = 0.0
     for team in conf_order:
         slot = SLOTS[team]
@@ -426,8 +499,8 @@ def _build_moves() -> dict[str, list[Move]]:
                 start=slot.semi_pos,
                 end=slot.conf_pos,
                 elbow_x=392 if slot.side == "left" else WIDTH - 392,
-                delay=conf_delay,
-                duration=0.9,
+                delay=_scaled_time(conf_delay),
+                duration=_scaled_time(0.9),
                 score=SCORES[("conf", team)],
                 side=slot.side,
             )
@@ -441,8 +514,8 @@ def _build_moves() -> dict[str, list[Move]]:
             start=(RIGHT_CONF_X, CONF_Y[0]),
             end=FINAL_CENTER,
             elbow_x=540,
-            delay=0.25,
-            duration=1.2,
+            delay=_scaled_time(0.25),
+            duration=_scaled_time(1.2),
             score=SCORES[("final", CHAMPION)],
             side="center",
         )
@@ -453,35 +526,29 @@ def _build_moves() -> dict[str, list[Move]]:
 MOVES = _build_moves()
 
 STAGE_ORDER = ("round1", "semi", "conf", "final")
-STAGE_BASES = {
-    "round1": 1.05,
-    "semi": 7.05,
-    "conf": 11.35,
-    "final": 14.25,
-}
 STAGE_MATCHUPS = {
     "round1": [
         ("Cleveland Cavaliers", "Miami Heat", "Cleveland Cavaliers"),
-        ("Boston Celtics", "Orlando Magic", "Boston Celtics"),
-        ("New York Knicks", "Detroit Pistons", "New York Knicks"),
         ("Indiana Pacers", "Milwaukee Bucks", "Indiana Pacers"),
+        ("New York Knicks", "Detroit Pistons", "New York Knicks"),
+        ("Boston Celtics", "Orlando Magic", "Boston Celtics"),
         ("Oklahoma City Thunder", "Memphis Grizzlies", "Oklahoma City Thunder"),
-        ("Golden State Warriors", "Houston Rockets", "Golden State Warriors"),
         ("Denver Nuggets", "LA Clippers", "Denver Nuggets"),
         ("Los Angeles Lakers", "Minnesota Timberwolves", "Minnesota Timberwolves"),
+        ("Houston Rockets", "Golden State Warriors", "Golden State Warriors"),
     ],
     "semi": [
-        ("Cleveland Cavaliers", "Boston Celtics", "Cleveland Cavaliers"),
-        ("New York Knicks", "Indiana Pacers", "New York Knicks"),
-        ("Oklahoma City Thunder", "Golden State Warriors", "Oklahoma City Thunder"),
-        ("Minnesota Timberwolves", "Denver Nuggets", "Minnesota Timberwolves"),
+        ("Cleveland Cavaliers", "Indiana Pacers", "Indiana Pacers"),
+        ("Boston Celtics", "New York Knicks", "New York Knicks"),
+        ("Oklahoma City Thunder", "Denver Nuggets", "Oklahoma City Thunder"),
+        ("Minnesota Timberwolves", "Golden State Warriors", "Minnesota Timberwolves"),
     ],
     "conf": [
-        ("Cleveland Cavaliers", "New York Knicks", "New York Knicks"),
+        ("Indiana Pacers", "New York Knicks", "Indiana Pacers"),
         ("Oklahoma City Thunder", "Minnesota Timberwolves", "Oklahoma City Thunder"),
     ],
     "final": [
-        ("New York Knicks", "Oklahoma City Thunder", "Oklahoma City Thunder"),
+        ("Indiana Pacers", "Oklahoma City Thunder", "Oklahoma City Thunder"),
     ],
 }
 
@@ -618,6 +685,67 @@ def _draw_glow(frame: Image.Image, center: tuple[int, int], color: tuple[int, in
     draw.ellipse((radius // 2, radius // 2, radius * 3.5, radius * 3.5), fill=(*color, alpha))
     glow = glow.filter(ImageFilter.GaussianBlur(radius=max(6, radius // 3)))
     frame.alpha_composite(glow, (int(center[0] - glow.width // 2), int(center[1] - glow.height // 2)))
+
+
+def _build_trophy_png_mask(source: Image.Image) -> Image.Image:
+    rgba = source.convert("RGBA")
+    arr = np.asarray(rgba)
+    rgb = arr[:, :, :3].astype(np.int16)
+    h, w = rgb.shape[:2]
+
+    edge_pixels = np.concatenate(
+        [
+            rgb[0:25, :, :].reshape(-1, 3),
+            rgb[-25:, :, :].reshape(-1, 3),
+            rgb[:, 0:25, :].reshape(-1, 3),
+            rgb[:, -25:, :].reshape(-1, 3),
+        ],
+        axis=0,
+    )
+    edge_pixels_u8 = edge_pixels.astype(np.uint8)
+    values, counts = np.unique(edge_pixels_u8, axis=0, return_counts=True)
+    bg_colors = values[np.argsort(counts)[::-1][:2]].astype(np.float32)
+    dist = np.minimum.reduce([np.sqrt(((rgb - color) ** 2).sum(axis=2)) for color in bg_colors])
+
+    # Remove the light studio background while keeping the trophy's white
+    # reflections intact. The source uses two checker-like background tones.
+    candidate_bg = dist <= 32.0
+    bg_mask = np.zeros((h, w), dtype=bool)
+    queue: deque[tuple[int, int]] = deque()
+
+    def seed(y: int, x: int) -> None:
+        if candidate_bg[y, x] and not bg_mask[y, x]:
+            bg_mask[y, x] = True
+            queue.append((y, x))
+
+    for x in range(w):
+        seed(0, x)
+        seed(h - 1, x)
+    for y in range(h):
+        seed(y, 0)
+        seed(y, w - 1)
+
+    while queue:
+        y, x = queue.popleft()
+        ny = y - 1
+        if ny >= 0 and candidate_bg[ny, x] and not bg_mask[ny, x]:
+            bg_mask[ny, x] = True
+            queue.append((ny, x))
+        ny = y + 1
+        if ny < h and candidate_bg[ny, x] and not bg_mask[ny, x]:
+            bg_mask[ny, x] = True
+            queue.append((ny, x))
+        nx = x - 1
+        if nx >= 0 and candidate_bg[y, nx] and not bg_mask[y, nx]:
+            bg_mask[y, nx] = True
+            queue.append((y, nx))
+        nx = x + 1
+        if nx < w and candidate_bg[y, nx] and not bg_mask[y, nx]:
+            bg_mask[y, nx] = True
+            queue.append((y, nx))
+
+    alpha = np.where(bg_mask, 0, 255).astype(np.uint8)
+    return Image.fromarray(alpha).filter(ImageFilter.GaussianBlur(1.0))
 
 
 def _draw_background_trophy(frame: Image.Image, t: float) -> None:
@@ -894,11 +1022,20 @@ def _draw_card(
 
 
 def _draw_score_badge(frame: Image.Image, text: str, x: float, y: float, alpha: int = 255) -> None:
-    badge = Image.new("RGBA", (92, 32), (0, 0, 0, 0))
+    badge = Image.new("RGBA", (176, 60), (0, 0, 0, 0))
     draw = ImageDraw.Draw(badge, "RGBA")
-    draw.rounded_rectangle((0, 0, 91, 31), radius=13, fill=(243, 195, 85, alpha), outline=(255, 255, 255, 48), width=1)
-    draw.text((46, 16), text, font=_load_font(18, bold=True), fill="#111111", anchor="mm")
-    frame.alpha_composite(badge, (int(x - 46), int(y - 16)))
+    draw.rounded_rectangle((0, 0, 175, 59), radius=22, fill=(255, 214, 54, alpha), outline=(255, 250, 202, 135), width=3)
+    draw.rounded_rectangle((8, 8, 167, 51), radius=17, fill=(255, 238, 153, int(alpha * 0.28)))
+    draw.text(
+        (88, 30),
+        text,
+        font=_load_font(38, bold=True),
+        fill=(255, 231, 106, alpha),
+        anchor="mm",
+        stroke_width=4,
+        stroke_fill=(28, 18, 4, alpha),
+    )
+    frame.alpha_composite(badge, (int(x - 88), int(y - 30)))
 
 
 def _draw_seed_number(frame: Image.Image, x: float, y: float, seed: int, side: str, alpha: int = 255) -> None:
@@ -998,11 +1135,42 @@ def _draw_round_logo(
     alpha: float = 1.0,
     scale: float = 1.0,
     glow: bool = True,
+    stage: str | None = None,
 ) -> None:
     tile = _team_square_logo(team, size)
     _draw_card(frame, tile, pos[0], pos[1], alpha, scale=scale, glow=glow)
-    if score and alpha > 0.25:
-        _draw_score_badge(frame, score, pos[0], pos[1] + size // 2 + 18, alpha=int(255 * _clamp(alpha)))
+    if score and alpha > 0.25 and stage != "conf":
+        score_x, score_y = _score_badge_position(pos, size, stage)
+        _draw_score_badge(frame, score, score_x, score_y, alpha=int(255 * _clamp(alpha)))
+
+
+def _score_badge_position(pos: tuple[int, int], size: int, stage: str | None) -> tuple[int, int]:
+    score_x = pos[0]
+    if stage == "conf":
+        if pos[0] < WIDTH * 0.5:
+            score_x -= 108
+        else:
+            score_x += 108
+        score_y = pos[1] + size // 2 + 22
+    else:
+        if pos[0] < WIDTH * 0.5 - 10:
+            score_x += 22
+        elif pos[0] > WIDTH * 0.5 + 10:
+            score_x -= 22
+        score_y = pos[1] + size // 2 + 32
+    return score_x, score_y
+
+
+def _draw_conference_score_overlay(frame: Image.Image, t: float) -> None:
+    overlay = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
+    for move in MOVES["conf"]:
+        start_time = STAGE_BASES["conf"] + move.delay
+        end_time = start_time + move.duration
+        if t < end_time:
+            continue
+        score_x, score_y = _score_badge_position(move.end, ROUND_LOGO_SIZE, "conf")
+        _draw_score_badge(overlay, move.score, score_x, score_y, alpha=255)
+    frame.alpha_composite(overlay)
 
 
 def _draw_seed_numbers(frame: Image.Image) -> None:
@@ -1125,9 +1293,10 @@ def _build_line_anims() -> list[SegmentAnim]:
         raw_lines.append((stage, y_mid, x_mid, index, anim))
 
     raw_lines.sort(key=lambda item: (item[0], item[1], item[2], item[3]))
-    stage_bases = [0.30, 2.55, 5.05, 7.65]
-    stage_steps = [0.06, 0.07, 0.08, 0.09]
-    stage_durations = [0.58, 0.58, 0.60, 0.62]
+    # Trace the inner bracket lines first so the motion feels anchored to the title from frame one.
+    stage_bases = [_scaled_time(value) for value in [5.40, 3.55, 1.80, 0.00]]
+    stage_steps = [_scaled_time(value) for value in [0.06, 0.07, 0.08, 0.09]]
+    stage_durations = [_scaled_time(value) for value in [0.58, 0.58, 0.60, 0.62]]
     stage_counts = [0, 0, 0, 0]
     lines: list[SegmentAnim] = []
     for stage, _y_mid, _x_mid, _index, anim in raw_lines:
@@ -1155,18 +1324,7 @@ def render_video(output_path: Path, audio_path: Path | None = None, duration: fl
         overlay = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
         draw = ImageDraw.Draw(overlay, "RGBA")
         for anim in LINE_ANIMS:
-            faint = (*anim.color[:3], 32 if anim.color[:3] == (230, 189, 85) else 26)
-            _draw_segment(draw, anim.start, anim.end, faint, max(1, anim.width - 1))
-            progress = _ease_out((t - anim.delay) / max(anim.duration, 1e-6))
-            if progress <= 0.0:
-                continue
-            bright = anim.color
-            _draw_segment_progress(draw, anim.start, anim.end, progress, bright, anim.width)
-            if progress < 1.0:
-                tip_x = int(_lerp(anim.start[0], anim.end[0], progress))
-                tip_y = int(_lerp(anim.start[1], anim.end[1], progress))
-                draw.ellipse((tip_x - 6, tip_y - 6, tip_x + 6, tip_y + 6), fill=(255, 215, 116, 96))
-                draw.ellipse((tip_x - 3, tip_y - 3, tip_x + 3, tip_y + 3), fill=(255, 248, 220, 170))
+            draw.line((anim.start, anim.end), fill=anim.color, width=anim.width)
         return overlay
 
     static_seed_numbers = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
@@ -1193,7 +1351,17 @@ def render_video(output_path: Path, audio_path: Path | None = None, duration: fl
                 _draw_seed_logo(logo_layer, team, slot.seed_pos[0], slot.seed_pos[1], slot.side, alpha=int(255 * _clamp(alpha)))
             else:
                 size = ROUND_LOGO_SIZE
-                _draw_round_logo(logo_layer, team, pos, size=size, score=score if alpha > 0.82 else None, alpha=alpha, scale=1.0, glow=False)
+                _draw_round_logo(
+                    logo_layer,
+                    team,
+                    pos,
+                    size=size,
+                    score=score if alpha > 0.82 else None,
+                    alpha=alpha,
+                    scale=1.0,
+                    glow=False,
+                    stage=str(level),
+                )
 
         for team in TEAM_ORDER:
             state = states[team]
@@ -1201,10 +1369,13 @@ def render_video(output_path: Path, audio_path: Path | None = None, duration: fl
                 continue
             pos = state["pos"]
             scale = float(state["scale"])
-            _draw_round_logo(logo_layer, team, pos, size=ROUND_LOGO_SIZE, score=None, alpha=1.0, scale=scale, glow=True)
+            _draw_round_logo(logo_layer, team, pos, size=ROUND_LOGO_SIZE, score=None, alpha=1.0, scale=scale, glow=True, stage=str(state["level"]))
 
         frame.alpha_composite(logo_layer)
-        return np.array(frame.convert("RGB"))
+        _draw_conference_score_overlay(frame, t)
+        rgb_frame = frame.convert("RGB")
+        rgb_frame = rgb_frame.filter(EXPORT_SHARPEN)
+        return np.array(rgb_frame)
 
     clip = VideoClip(make_frame, duration=float(duration))
     audio = None
@@ -1222,7 +1393,16 @@ def render_video(output_path: Path, audio_path: Path | None = None, duration: fl
             audio_codec="aac",
             temp_audiofile=str(temp_audio_path),
             remove_temp=False,
-            ffmpeg_params=["-pix_fmt", "yuv420p", "-movflags", "+faststart"],
+            ffmpeg_params=[
+                "-pix_fmt",
+                "yuv420p",
+                "-movflags",
+                "+faststart",
+                "-crf",
+                str(EXPORT_CRF),
+                "-preset",
+                EXPORT_PRESET,
+            ],
         )
     else:
         clip.write_videofile(
@@ -1230,7 +1410,16 @@ def render_video(output_path: Path, audio_path: Path | None = None, duration: fl
             fps=fps,
             codec="libx264",
             audio=False,
-            ffmpeg_params=["-pix_fmt", "yuv420p", "-movflags", "+faststart"],
+            ffmpeg_params=[
+                "-pix_fmt",
+                "yuv420p",
+                "-movflags",
+                "+faststart",
+                "-crf",
+                str(EXPORT_CRF),
+                "-preset",
+                EXPORT_PRESET,
+            ],
         )
     clip.close()
     if audio is not None:
