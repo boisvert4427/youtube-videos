@@ -26,9 +26,10 @@ WIDTH = 1080
 HEIGHT = 1920
 FPS = 30
 TOTAL_DURATION = 40.0
+CHAMPION_HOLD_SECONDS = 5.0
 TIMELINE_SCALE = 2.2
 TEAM_TIMELINE_OFFSET = 1.05
-FINAL_STAGE_RAW_BASE = 16.7045
+FINAL_STAGE_RAW_BASE = 16.18
 EXPORT_CRF = 16
 EXPORT_PRESET = "slow"
 EXPORT_SHARPEN = ImageFilter.UnsharpMask(radius=1.1, percent=90, threshold=2)
@@ -515,7 +516,7 @@ def _build_moves() -> dict[str, list[Move]]:
             end=FINAL_CENTER,
             elbow_x=540,
             delay=_scaled_time(0.25),
-            duration=_scaled_time(1.2),
+            duration=_scaled_time(0.8),
             score=SCORES[("final", CHAMPION)],
             side="center",
         )
@@ -949,6 +950,45 @@ def _draw_finals_box(frame: Image.Image, t: float, highlight: bool = False) -> N
         frame.alpha_composite(glow, (FINALS_BOX[0] - 80, FINALS_BOX[1] - 80))
 
 
+def _draw_champion_box(frame: Image.Image, t: float, start_time: float) -> None:
+    progress = _clamp((t - start_time) / 0.8)
+    alpha = int(255 * _ease_in_out(progress))
+    if alpha <= 0:
+        return
+
+    box = CHAMPION_BOX
+    shadow = Image.new("RGBA", (box[2] - box[0] + 52, box[3] - box[1] + 52), (0, 0, 0, 0))
+    sd = ImageDraw.Draw(shadow, "RGBA")
+    sd.rounded_rectangle((20, 20, shadow.width - 21, shadow.height - 21), radius=28, fill=(0, 0, 0, 150))
+    shadow = shadow.filter(ImageFilter.GaussianBlur(radius=14))
+    frame.alpha_composite(shadow, (box[0] - 26, box[1] - 26))
+
+    draw = ImageDraw.Draw(frame, "RGBA")
+    draw.rounded_rectangle(box, radius=26, fill=(10, 10, 14, 242), outline=(255, 207, 104, alpha), width=4)
+    draw.rounded_rectangle((box[0] + 12, box[1] + 12, box[2] - 12, box[3] - 12), radius=20, fill=(0, 0, 0, 120))
+
+    center_x = (box[0] + box[2]) // 2
+    top_y = box[1] + 30
+    title_font = _load_font(22, bold=True)
+    subtitle_font = _load_font(18, bold=True)
+    small_font = _load_font(16, bold=True)
+
+    draw.text((center_x, top_y), "NBA CHAMPIONS", font=title_font, fill=(255, 242, 184, alpha), anchor="mm")
+    draw.line((box[0] + 28, box[1] + 56, box[2] - 28, box[1] + 56), fill=(255, 210, 96, int(alpha * 0.65)), width=2)
+
+    glow = Image.new("RGBA", (136, 136), (0, 0, 0, 0))
+    gd = ImageDraw.Draw(glow, "RGBA")
+    gd.ellipse((14, 14, 122, 122), fill=(255, 210, 104, 72))
+    glow = glow.filter(ImageFilter.GaussianBlur(radius=18))
+    frame.alpha_composite(glow, (center_x - 68, box[1] + 58))
+
+    logo = _load_logo(CHAMPION, 100)
+    frame.alpha_composite(logo, (center_x - logo.width // 2, box[1] + 68))
+
+    draw.text((center_x, box[3] - 46), CHAMPION.upper(), font=subtitle_font, fill=(255, 236, 178, alpha), anchor="mm")
+    draw.text((center_x, box[3] - 20), "2025", font=small_font, fill=(255, 210, 96, alpha), anchor="mm")
+
+
 @lru_cache(maxsize=32)
 def _team_card(team: str, seed: int, side: str) -> Image.Image:
     width = 164
@@ -1161,7 +1201,9 @@ def _score_badge_position(pos: tuple[int, int], size: int, stage: str | None) ->
     return score_x, score_y
 
 
-def _draw_conference_score_overlay(frame: Image.Image, t: float) -> None:
+def _draw_conference_score_overlay(frame: Image.Image, t: float, stop_at: float | None = None) -> None:
+    if stop_at is not None and t >= stop_at:
+        return
     overlay = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
     for move in MOVES["conf"]:
         start_time = STAGE_BASES["conf"] + move.delay
@@ -1313,6 +1355,7 @@ LINE_ANIMS = _build_line_anims()
 def render_video(output_path: Path, audio_path: Path | None = None, duration: float = TOTAL_DURATION, fps: int = FPS) -> Path:
     audio_exists = bool(audio_path and audio_path.exists())
     temp_audio_path = output_path.with_name(f"{output_path.stem}_temp_audio.m4a")
+    champion_hold_start = max(0.0, float(duration) - CHAMPION_HOLD_SECONDS)
     static_base = _background_frame(0.0)
 
     _draw_title_panel(static_base, 1.0)
@@ -1346,6 +1389,8 @@ def render_video(output_path: Path, audio_path: Path | None = None, duration: fl
             pos = state["pos"]
             alpha = float(state["alpha"])
             score = state["score"]
+            if level == "final" and t >= champion_hold_start:
+                score = None
             if level == "seed":
                 slot = SLOTS[team]
                 _draw_seed_logo(logo_layer, team, slot.seed_pos[0], slot.seed_pos[1], slot.side, alpha=int(255 * _clamp(alpha)))
@@ -1372,7 +1417,10 @@ def render_video(output_path: Path, audio_path: Path | None = None, duration: fl
             _draw_round_logo(logo_layer, team, pos, size=ROUND_LOGO_SIZE, score=None, alpha=1.0, scale=scale, glow=True, stage=str(state["level"]))
 
         frame.alpha_composite(logo_layer)
-        _draw_conference_score_overlay(frame, t)
+        if t >= champion_hold_start:
+            _draw_champion_box(frame, t, champion_hold_start)
+        else:
+            _draw_conference_score_overlay(frame, t, champion_hold_start)
         rgb_frame = frame.convert("RGB")
         rgb_frame = rgb_frame.filter(EXPORT_SHARPEN)
         return np.array(rgb_frame)
