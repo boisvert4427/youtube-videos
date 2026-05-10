@@ -2,10 +2,11 @@
 
 Pour les consignes operatives du projet et les conventions a suivre, voir `agents.md`.
 
-Projet structure en 3 modules:
+Projet structure en 4 modules:
 
 - `scraper/`: collecte, normalisation, export CSV.
 - `video_generator/`: lecture du CSV et preparation des donnees video.
+- `video_tools/`: utilitaires video comme l'extraction de snapshots.
 - `history/`: timelines historiques, datasets, portraits et rendus video.
 
 ## Structure
@@ -64,16 +65,40 @@ Commandes:
    - `python video_generator/generate_federer_vs_nadal_duel_shorts_moviepy.py`
 9. Generer un Short Federer vs Nadal retro gaming:
    - `python video_generator/generate_federer_vs_nadal_retro_fight_shorts_moviepy.py`
-10. Generer un Short PSG vs Liverpool 2026 ultra anime:
+10. Generer un Short Federer Nadal Djokovic Grand Slam par age:
+   - `python video_generator/generate_federer_nadal_djokovic_age_race_shorts_moviepy.py`
+11. Generer un Short Ronaldo vs Messi buts par age:
+   - `python video_generator/football/generate_ronaldo_messi_goals_by_age_race_shorts_moviepy.py`
+12. Generer un Short PSG vs Liverpool 2026 ultra anime:
    - `python video_generator/generate_psg_vs_liverpool_double_confrontation_shorts_moviepy.py`
-11. Generer un Short SGA vs Jokic version Bird vs Magic:
+13. Generer un Short SGA vs Jokic version Bird vs Magic:
    - `python video_generator/generate_sga_vs_jokic_career_shorts_moviepy.py`
-12. Generer un Short Rookie of the Year Flagg vs Knueppel:
+14. Generer un Short Rookie of the Year Flagg vs Knueppel:
    - `python video_generator/generate_cooper_flagg_vs_kon_knueppel_roty_shorts_moviepy.py`
-13. Generer un Short SGA vs Jokic vs Wemby:
+15. Generer un Short SGA vs Jokic vs Wemby:
    - `python video_generator/generate_sga_jokic_wemby_mvp_short_moviepy.py`
-14. Generer un Short NBA bracket 2025 style TV:
+16. Generer un Short NBA bracket 2025 style TV:
    - `python video_generator/generate_nba_playoff_bracket_2025_moviepy.py`
+17. Extraire des snapshots d'un short YouTube:
+   - `python video_tools/extract_youtube_short_snapshots.py "https://www.youtube.com/shorts/VIDEO_ID" --interval 1`
+
+## Snapshots Short YouTube
+
+Fichiers principaux:
+
+- Script principal: `video_tools/extract_youtube_short_snapshots.py`
+- Sortie par defaut: `data/processed/youtube_short_snapshots/<short_id>_<timestamp>/`
+
+Usage:
+
+- Short YouTube: `python video_tools/extract_youtube_short_snapshots.py "https://www.youtube.com/shorts/VIDEO_ID" --interval 1`
+- Fichier local: `python video_tools/extract_youtube_short_snapshots.py data/processed/demo_short.mp4 --interval 1`
+
+Resultat:
+
+- PNG nommes `frame_00001.png`, `frame_00002.png`, etc.
+- `manifest.json` avec les timestamps et les chemins de sortie
+- `yt-dlp` est utilise pour telecharger une URL YouTube si besoin
 
 ## Template NBA Playoff Bracket 2025
 
@@ -400,3 +425,47 @@ Caractere du template:
 Commande:
 
 - `python video_generator/generate_federer_vs_nadal_retro_fight_shorts_moviepy.py`
+
+## Template Federer Nadal Djokovic Grand Slam Age Race Shorts
+
+Fichiers principaux:
+
+- Script principal: `video_generator/tennis/generate_federer_nadal_djokovic_age_race_shorts_moviepy.py`
+- Wrapper: `video_generator/generate_federer_nadal_djokovic_age_race_shorts_moviepy.py`
+- Sortie finale par defaut: `data/processed/tennis/federer_nadal_djokovic_age_race_shorts.mp4`
+
+Caractere du template:
+
+- Format vertical `1080x1920`
+- Inspiré du poster de reference avec fond bleu-violet premium et layout sports broadcast
+- Portraits stacks a gauche, barres animees a droite, axe des ages en haut
+- Race par age sur les titres du Grand Chelem
+- Totaux mis en avant: `20`, `22`, `24`
+- Recap final des totaux en bas pour boucler le short
+
+Commande:
+
+- `python video_generator/generate_federer_nadal_djokovic_age_race_shorts_moviepy.py`
+
+## Template Ronaldo Messi Goals By Age Race Shorts
+
+Fichiers principaux:
+
+- Script principal: `video_generator/football/generate_ronaldo_messi_goals_by_age_race_shorts_moviepy.py`
+- Sortie finale par defaut: `data/processed/football/ronaldo_messi_goals_by_age_race_midnight.mp4`
+- Preview conseillee: `tmp_frames/ronaldo_messi_goals_by_age_race_preview.png`
+- Audio de fond par defaut: `data/raw/audio/Midnight_Grip_20260402_0828.mp3`
+
+Caractere du template:
+
+- Format vertical `1080x1920`
+- Duree par defaut `40s`, `60 fps`
+- Race Ronaldo vs Messi sur le nombre de buts cumules selon l'age
+- Layout inspire du short de reference: fond bleu-violet, portraits a gauche, barres a droite
+- Ligne horizontale visible entre la barre et le rond, avec apparition progressive a l'entree d'ecran
+- Ronds de gains annuels masques progressivement derriere la barre quand ils la touchent
+- Animation de changement de rang: la barre qui monte passe entierement au-dessus
+
+Commande:
+
+- `python video_generator/football/generate_ronaldo_messi_goals_by_age_race_shorts_moviepy.py`

@@ -17,6 +17,7 @@ du template NBA bracket 2025.
 
 - `scraper/`: collecte et normalisation des donnees.
 - `video_generator/`: generateurs MoviePy et Manim.
+- `video_tools/`: utilitaires video et extraction de snapshots.
 - `video_generator/basketball/`: anciens scripts et wrappers basketball.
 - `video_generator/cycling/`: templates cyclisme.
 - `video_generator/football/`: templates football.
@@ -73,6 +74,39 @@ du template NBA bracket 2025.
 - Ne pas reintroduire les traits jaunes centraux dans le bracket.
 - Ne pas remettre un logo NBA trop petit ou un titre serre.
 - Ne pas couper le trophee ou les logos avec des masques trop agressifs.
+
+## Tennis Grand Slam Age Race Shorts
+
+- Script canonique: `video_generator/generate_federer_nadal_djokovic_age_race_shorts_moviepy.py`
+- Sortie par defaut: `data/processed/tennis/federer_nadal_djokovic_age_race_shorts.mp4`
+- Format vertical `1080x1920`
+- Contenu: Federer 20, Nadal 22, Djokovic 24 avec portraits, barres animees et recap par age
+- Audio de fond par defaut: `data/raw/audio/audio.mp3`
+
+## Football Goals By Age Race Shorts
+
+- Script canonique: `video_generator/football/generate_ronaldo_messi_goals_by_age_race_shorts_moviepy.py`
+- Sortie par defaut: `data/processed/football/ronaldo_messi_goals_by_age_race_midnight.mp4`
+- Format vertical `1080x1920`, duree par defaut `40s`, `60 fps`
+- Contenu: Ronaldo vs Messi, buts cumules par age, donnees age `18` a `39`
+- Audio de fond par defaut: `data/raw/audio/Midnight_Grip_20260402_0828.mp3`
+- Le template reutilise le moteur Tennis age race, avec override des joueurs, couleurs, photos, axe et echelle.
+
+### Points Sensibles
+
+- Garder la barre de depart juste apres les photos, pas au milieu de l'ecran.
+- La graduation des ages defile de droite a gauche et ne doit pas apparaitre a gauche de la barre de depart.
+- La ligne horizontale entre la barre et le rond doit rester visible, mais apparaitre progressivement quand elle entre a l'ecran.
+- Les ronds de gains annuels doivent disparaitre progressivement derriere la barre quand ils la touchent.
+- Lors d'un changement de rang, la barre qui monte doit passer entierement au-dessus de l'autre.
+
+## Snapshots Short YouTube
+
+- Script canonique: `video_tools/extract_youtube_short_snapshots.py`
+- Source: URL YouTube Shorts ou fichier video local
+- Sortie par defaut: `data/processed/youtube_short_snapshots/<short_id>_<timestamp>/`
+- Format de sortie: PNG + `manifest.json`
+- Dependence URL: `yt-dlp`
 
 ## Workflow Conseille
 

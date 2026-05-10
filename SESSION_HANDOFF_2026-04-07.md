@@ -3,6 +3,15 @@
 ## Ce qui a ete fait
 
 - Ajout de plusieurs generateurs Shorts basket/cyclisme/football/tennis bases sur MoviePy.
+- Ajout du template Ronaldo vs Messi buts par age:
+  - `video_generator/football/generate_ronaldo_messi_goals_by_age_race_shorts_moviepy.py`
+  - sortie finale avec audio Midnight: `data/processed/football/ronaldo_messi_goals_by_age_race_midnight.mp4`
+  - audio par defaut: `data/raw/audio/Midnight_Grip_20260402_0828.mp3`
+- Ajout du template Federer/Nadal/Djokovic Grand Slam par age:
+  - `video_generator/tennis/generate_federer_nadal_djokovic_age_race_shorts_moviepy.py`
+  - wrappers racine compatibles dans `video_generator/`
+- Ajout de l'outil snapshots YouTube Shorts:
+  - `video_tools/extract_youtube_short_snapshots.py`
 - Ajout d'un generateur MVP Race vertical en Manim :
   - `video_generator/basketball/generate_mvp_race_shorts_manim.py`
   - wrapper `video_generator/generate_mvp_race_shorts_manim.py`
@@ -64,3 +73,12 @@ python video_generator\generate_mvp_race_shorts_manim.py --render --scene MVPRac
 ## Remarque
 
 Le but demain n'est pas de refaire tout le systeme : la base Manim tourne deja. Il faut surtout **ameliorer les assets et le layout**.
+
+## Note plus recente
+
+Le workflow visuel recent utilise souvent:
+
+- une preview PNG avant rendu complet
+- un controle de frames intermediaires
+- un rendu final vertical `1080x1920`
+- une musique de fond locale dans `data/raw/audio/`
