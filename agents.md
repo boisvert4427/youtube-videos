@@ -96,7 +96,7 @@ du template NBA bracket 2025.
 
 - Garder la barre de depart juste apres les photos, pas au milieu de l'ecran.
 - La graduation des ages defile de droite a gauche et ne doit pas apparaitre a gauche de la barre de depart.
-- La ligne horizontale entre la barre et le prochain rond doit rester visible des que l'espace existe, sans attendre l'entree du rond.
+- La ligne horizontale doit continuer jusqu'au bord droit et rester derriere les ronds, pas s'arreter au rond.
 - Les ronds de gains annuels doivent disparaitre progressivement derriere la barre quand ils la touchent.
 - Lors d'un changement de rang, la barre qui monte doit passer entierement au-dessus de l'autre.
 
@@ -136,7 +136,7 @@ du template NBA bracket 2025.
 - Verifier une frame intermediaire avant le rendu final, surtout autour des ages `32-34`.
 - Garder la barre de depart juste apres les photos.
 - Les ronds de gains annuels doivent rester lisibles sur la barre d'age qui defile.
-- La ligne horizontale doit etre visible avant l'arrivee du rond et s'arreter avant lui quand il est a l'ecran.
+- La ligne horizontale doit continuer jusqu'au bord droit et rester derriere les ronds, pas s'arreter au rond.
 - Les valeurs dans les barres sont les points cumules; les ronds affichent les points de la saison suivante par age.
 - Les donnees viennent de Basketball-Reference et peuvent evoluer pour LeBron tant que sa carriere continue.
 

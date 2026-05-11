@@ -375,7 +375,7 @@ Comment est faite la video:
 - Donnees extraites depuis Basketball-Reference, table `totals_stats`
 - Le script reutilise le moteur Federer/Nadal/Djokovic age race avec overrides NBA
 - Axe age `18` a `41`, avec valeurs annuelles dans les ronds et cumul dans les barres
-- Ligne horizontale toujours visible vers le prochain rond/age, sans fade-in tardif au defilement
+- Ligne horizontale continue jusqu'au bord droit, dessinee derriere les ronds pour rester toujours presente
 
 Commandes:
 
@@ -528,7 +528,7 @@ Caractere du template:
 - Duree par defaut `40s`, `60 fps`
 - Race Ronaldo vs Messi sur le nombre de buts cumules selon l'age
 - Layout inspire du short de reference: fond bleu-violet, portraits a gauche, barres a droite
-- Ligne horizontale visible entre la barre et le prochain rond des que l'espace existe
+- Ligne horizontale continue jusqu'au bord droit, dessinee derriere les ronds pour rester toujours presente
 - Ronds de gains annuels masques progressivement derriere la barre quand ils la touchent
 - Animation de changement de rang: la barre qui monte passe entierement au-dessus
 
