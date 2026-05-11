@@ -36,6 +36,7 @@ Thumbs.db
 
 # Local scratch / temp assets
 frame*.png
+tmp_frames/
 tmp_*.html
 *TEMP_MPY_wvf_snd.mp4
 

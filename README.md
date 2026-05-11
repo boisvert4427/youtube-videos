@@ -79,7 +79,15 @@ Commandes:
    - `python video_generator/generate_sga_jokic_wemby_mvp_short_moviepy.py`
 16. Generer un Short NBA bracket 2025 style TV:
    - `python video_generator/generate_nba_playoff_bracket_2025_moviepy.py`
-17. Extraire des snapshots d'un short YouTube:
+17. Generer le CSV MVP Ladder NBA 2025-26 weekly:
+   - `python scraper/basketball/build_nba_kia_mvp_ladder_weekly_csv.py`
+18. Generer un Short NBA MVP Ladder weekly cumule:
+   - `python video_generator/basketball/generate_nba_mvp_ladder_weekly_race_shorts_moviepy.py`
+19. Generer le CSV LeBron vs Jordan vs Kobe points par age:
+   - `python scraper/basketball/build_nba_points_by_age_csv.py`
+20. Generer un Short LeBron vs Jordan vs Kobe points par age:
+   - `python video_generator/basketball/generate_lebron_jordan_kobe_points_by_age_race_shorts_moviepy.py`
+21. Extraire des snapshots d'un short YouTube:
    - `python video_tools/extract_youtube_short_snapshots.py "https://www.youtube.com/shorts/VIDEO_ID" --interval 1`
 
 ## Snapshots Short YouTube
@@ -318,6 +326,64 @@ Commandes:
 - Preview rapide:
   - `python video_generator/generate_mvp_race_shorts_moviepy.py --output data/processed/basketball/mvp_race_shorts_preview.mp4 --music data/raw/audio/audio.mp3`
 
+## Template NBA MVP Ladder Weekly Race Shorts
+
+Fichiers principaux:
+
+- Builder CSV: `scraper/basketball/build_nba_kia_mvp_ladder_weekly_csv.py`
+- Script principal: `video_generator/basketball/generate_nba_mvp_ladder_weekly_race_shorts_moviepy.py`
+- CSV par defaut: `data/processed/basketball/nba_kia_mvp_ladder_2025_26_weekly.csv`
+- Sortie finale par defaut: `data/processed/basketball/nba_mvp_ladder_cumulative_race_shorts.mp4`
+- Preview conseillee: `tmp_frames/nba_mvp_ladder_cumulative_race_preview.png`
+- Assets locaux: `data/raw/mvp_race_assets/`
+- Audio de fond par defaut: `data/raw/audio/Midnight_Grip_20260402_0828.mp3`
+
+Comment est faite la video:
+
+- Format vertical `1080x1920`
+- Duree par defaut `40s`, `60 fps`
+- Race hebdomadaire du top 5 de la Kia MVP Ladder NBA
+- Score cumule par rang: `100`, `80`, `65`, `50`, `40`
+- Les noms des joueurs ne sont pas affiches sur les barres pour coller au style age-race
+- Les photos et barres sont recentrees dans le layout short
+- Les changements de rang sont animes: la barre qui monte passe visiblement au-dessus
+
+Commandes:
+
+- Construire le CSV:
+  - `python scraper/basketball/build_nba_kia_mvp_ladder_weekly_csv.py`
+- Generer la video:
+  - `python video_generator/basketball/generate_nba_mvp_ladder_weekly_race_shorts_moviepy.py`
+
+## Template LeBron Jordan Kobe Points By Age Race Shorts
+
+Fichiers principaux:
+
+- Builder CSV: `scraper/basketball/build_nba_points_by_age_csv.py`
+- Script principal: `video_generator/basketball/generate_lebron_jordan_kobe_points_by_age_race_shorts_moviepy.py`
+- CSV par defaut: `data/processed/basketball/nba_points_by_age_lebron_jordan_kobe.csv`
+- Sortie finale par defaut: `data/processed/basketball/lebron_jordan_kobe_points_by_age_race_shorts.mp4`
+- Preview conseillee: `tmp_frames/lebron_jordan_kobe_points_by_age_race_preview.png`
+- Assets locaux: `data/raw/nba_goat_assets/`
+- Audio de fond par defaut: `data/raw/audio/Midnight_Grip_20260402_0828.mp3`
+
+Comment est faite la video:
+
+- Format vertical `1080x1920`
+- Duree par defaut `40s`, `60 fps`
+- Race LeBron vs Jordan vs Kobe sur les points NBA de saison reguliere cumules par age
+- Donnees extraites depuis Basketball-Reference, table `totals_stats`
+- Le script reutilise le moteur Federer/Nadal/Djokovic age race avec overrides NBA
+- Axe age `18` a `41`, avec valeurs annuelles dans les ronds et cumul dans les barres
+- Ligne horizontale toujours visible vers le prochain rond/age, sans fade-in tardif au defilement
+
+Commandes:
+
+- Construire le CSV:
+  - `python scraper/basketball/build_nba_points_by_age_csv.py`
+- Generer la video:
+  - `python video_generator/basketball/generate_lebron_jordan_kobe_points_by_age_race_shorts_moviepy.py`
+
 ## Template NBA Playoff Bracket Shorts
 
 Fichiers principaux:
@@ -462,7 +528,7 @@ Caractere du template:
 - Duree par defaut `40s`, `60 fps`
 - Race Ronaldo vs Messi sur le nombre de buts cumules selon l'age
 - Layout inspire du short de reference: fond bleu-violet, portraits a gauche, barres a droite
-- Ligne horizontale visible entre la barre et le rond, avec apparition progressive a l'entree d'ecran
+- Ligne horizontale visible entre la barre et le prochain rond des que l'espace existe
 - Ronds de gains annuels masques progressivement derriere la barre quand ils la touchent
 - Animation de changement de rang: la barre qui monte passe entierement au-dessus
 

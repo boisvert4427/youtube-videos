@@ -746,19 +746,18 @@ def _render_scene(
         row_center = int(round(row_centers[0] + rank_position * row_gap))
         bar_w = int(min_bar_w + (count / VALUE_SCALE_MAX) * (max_bar_w - min_bar_w))
         bar_w = max(min_bar_w, min(max_bar_w, bar_w))
-        for gain_age in visible_age_ticks:
-            circle_x = int(round(tick_origin_x + (gain_age - current_age) * age_step_px))
-            bar_right = bar_area_left + bar_w
-            if circle_x <= bar_right or circle_x > WIDTH + circle_radius:
-                continue
-            line_stop_x = max(bar_right + 8, circle_x - circle_radius - 6)
-
-            line_start = bar_area_left + bar_w + 8
+        bar_right = bar_area_left + bar_w
+        future_circle_positions = [
+            int(round(tick_origin_x + (gain_age - current_age) * age_step_px))
+            for gain_age in visible_age_ticks
+        ]
+        next_circle_x = min((x for x in future_circle_positions if x > bar_right), default=None)
+        if next_circle_x is not None:
+            line_start = bar_right + 8
+            line_stop_x = WIDTH if next_circle_x > WIDTH + circle_radius else max(bar_right + 8, next_circle_x - circle_radius - 6)
             visible_line_end = min(line_stop_x, WIDTH)
-            enter_progress = _smoothstep((WIDTH + circle_radius - circle_x) / max(1, circle_radius * 2))
-            line_alpha = int(round(58 * enter_progress))
-            if visible_line_end > line_start and line_alpha > 0:
-                draw.line((line_start, row_center, visible_line_end, row_center), fill=(255, 255, 255, line_alpha), width=2)
+            if visible_line_end > line_start:
+                draw.line((line_start, row_center, visible_line_end, row_center), fill=(255, 255, 255, 58), width=2)
 
     for rank_position, player, count, gain in render_rows:
         row_center = int(round(row_centers[0] + rank_position * row_gap))

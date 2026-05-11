@@ -96,9 +96,49 @@ du template NBA bracket 2025.
 
 - Garder la barre de depart juste apres les photos, pas au milieu de l'ecran.
 - La graduation des ages defile de droite a gauche et ne doit pas apparaitre a gauche de la barre de depart.
-- La ligne horizontale entre la barre et le rond doit rester visible, mais apparaitre progressivement quand elle entre a l'ecran.
+- La ligne horizontale entre la barre et le prochain rond doit rester visible des que l'espace existe, sans attendre l'entree du rond.
 - Les ronds de gains annuels doivent disparaitre progressivement derriere la barre quand ils la touchent.
 - Lors d'un changement de rang, la barre qui monte doit passer entierement au-dessus de l'autre.
+
+## Basketball MVP Ladder Weekly Race Shorts
+
+- Builder CSV: `scraper/basketball/build_nba_kia_mvp_ladder_weekly_csv.py`
+- Script canonique: `video_generator/basketball/generate_nba_mvp_ladder_weekly_race_shorts_moviepy.py`
+- CSV par defaut: `data/processed/basketball/nba_kia_mvp_ladder_2025_26_weekly.csv`
+- Sortie par defaut: `data/processed/basketball/nba_mvp_ladder_cumulative_race_shorts.mp4`
+- Format vertical `1080x1920`, duree par defaut `40s`, `60 fps`
+- Contenu: top 5 Kia MVP Ladder 2025-26, score cumule semaine par semaine
+- Audio de fond par defaut: `data/raw/audio/Midnight_Grip_20260402_0828.mp3`
+- Assets joueurs attendus dans `data/raw/mvp_race_assets/`
+
+### Points Sensibles
+
+- Garder seulement les 5 premiers visibles.
+- Les noms des joueurs ne doivent pas etre affiches sur les barres.
+- Le score est cumule depuis les rangs hebdomadaires, pas une probabilite officielle.
+- Les photos et barres doivent rester centrees dans le layout short.
+- Lors d'un changement de rang, la barre qui monte doit passer visiblement au-dessus.
+
+## Basketball LeBron Jordan Kobe Points By Age Race Shorts
+
+- Builder CSV: `scraper/basketball/build_nba_points_by_age_csv.py`
+- Script canonique: `video_generator/basketball/generate_lebron_jordan_kobe_points_by_age_race_shorts_moviepy.py`
+- CSV par defaut: `data/processed/basketball/nba_points_by_age_lebron_jordan_kobe.csv`
+- Sortie par defaut: `data/processed/basketball/lebron_jordan_kobe_points_by_age_race_shorts.mp4`
+- Format vertical `1080x1920`, duree par defaut `40s`, `60 fps`
+- Contenu: LeBron vs Jordan vs Kobe, points NBA de saison reguliere cumules par age
+- Audio de fond par defaut: `data/raw/audio/Midnight_Grip_20260402_0828.mp3`
+- Assets joueurs attendus dans `data/raw/nba_goat_assets/`
+- Le template reutilise le moteur Tennis age race, avec override des joueurs, couleurs, photos, axe et echelle.
+
+### Points Sensibles
+
+- Verifier une frame intermediaire avant le rendu final, surtout autour des ages `32-34`.
+- Garder la barre de depart juste apres les photos.
+- Les ronds de gains annuels doivent rester lisibles sur la barre d'age qui defile.
+- La ligne horizontale doit etre visible avant l'arrivee du rond et s'arreter avant lui quand il est a l'ecran.
+- Les valeurs dans les barres sont les points cumules; les ronds affichent les points de la saison suivante par age.
+- Les donnees viennent de Basketball-Reference et peuvent evoluer pour LeBron tant que sa carriere continue.
 
 ## Snapshots Short YouTube
 
