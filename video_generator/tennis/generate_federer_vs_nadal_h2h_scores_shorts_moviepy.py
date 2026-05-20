@@ -42,6 +42,8 @@ TIMELINE_END_PADDING = 18
 BADGE_W = 186
 BADGE_H = 66
 BADGE_GAP_X = 16
+BADGE_MARGIN_X = 38
+BADGE_LANES = 5
 
 FEDERER = {
     "photo": "roger_federer.jpg",
@@ -239,17 +241,19 @@ def _time_offset(year: int, month: int = 1) -> float:
 @lru_cache(maxsize=1)
 def _match_layout() -> tuple[tuple[MatchEntry, int, int], ...]:
     slots: list[tuple[MatchEntry, int, int]] = []
-    last_slot_y = {"left": [-10_000.0, -10_000.0], "right": [-10_000.0, -10_000.0]}
-    min_gap = BADGE_H + 38
+    lane_gap = (WIDTH - 2 * BADGE_MARGIN_X - BADGE_W) / (BADGE_LANES - 1)
+    lane_x = [round(BADGE_MARGIN_X + idx * lane_gap) for idx in range(BADGE_LANES)]
+    lane_order = (2, 1, 3, 0, 4)
+    last_slot_y = [-10_000.0 for _ in range(BADGE_LANES)]
+    min_gap = BADGE_H + 72
     for match in MATCHES:
         slot_y = _time_offset(match.year, match.month) * ROW_SPACING
-        lanes = last_slot_y[match.winner]
-        lane = next((idx for idx, previous_y in enumerate(lanes) if slot_y - previous_y >= min_gap), 0)
-        if match.winner == "left":
-            x = 142 + lane * (BADGE_W + BADGE_GAP_X)
-        else:
-            x = WIDTH - 142 - BADGE_W - lane * (BADGE_W + BADGE_GAP_X)
-        lanes[lane] = slot_y
+        lane = next(
+            (idx for idx in lane_order if slot_y - last_slot_y[idx] >= min_gap),
+            min(range(BADGE_LANES), key=lambda idx: last_slot_y[idx]),
+        )
+        x = lane_x[lane]
+        last_slot_y[lane] = slot_y
         slots.append((match, x, 28))
     return tuple(slots)
 
