@@ -89,6 +89,8 @@ Commandes:
    - `python video_generator/basketball/generate_lebron_jordan_kobe_points_by_age_race_shorts_moviepy.py`
 21. Extraire des snapshots d'un short YouTube:
    - `python video_tools/extract_youtube_short_snapshots.py "https://www.youtube.com/shorts/VIDEO_ID" --interval 1`
+22. Generer un Short Federer vs Nadal H2H en scores:
+   - `python video_generator/generate_federer_vs_nadal_h2h_scores_shorts_moviepy.py`
 
 ## Snapshots Short YouTube
 
@@ -471,6 +473,27 @@ Caractere du template:
 Commande:
 
 - `python video_generator/generate_federer_vs_nadal_duel_shorts_moviepy.py`
+
+## Template Federer vs Nadal H2H Score Timeline Shorts
+
+Fichiers principaux:
+
+- Script principal: `video_generator/tennis/generate_federer_vs_nadal_h2h_scores_shorts_moviepy.py`
+- Wrapper: `video_generator/generate_federer_vs_nadal_h2h_scores_shorts_moviepy.py`
+- Sortie finale par defaut: `data/processed/tennis/federer_vs_nadal_h2h_scores_shorts.mp4`
+
+Caractere du template:
+
+- Format vertical `1080x1920`
+- Duree cible `45s`
+- Timeline verticale des matchs marquants Federer/Nadal
+- Les trophées de l'exemple sont remplaces par des badges de score
+- Scoreboard final de la rivalite: `16-24`
+- Hook et outro pensés pour un Short mobile lisible et rapide
+
+Commande:
+
+- `python video_generator/generate_federer_vs_nadal_h2h_scores_shorts_moviepy.py`
 
 ## Template Federer vs Nadal Retro Fight Shorts
 

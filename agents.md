@@ -83,6 +83,16 @@ du template NBA bracket 2025.
 - Contenu: Federer 20, Nadal 22, Djokovic 24 avec portraits, barres animees et recap par age
 - Audio de fond par defaut: `data/raw/audio/audio.mp3`
 
+## Federer vs Nadal H2H Score Timeline Shorts
+
+- Script canonique: `video_generator/tennis/generate_federer_vs_nadal_h2h_scores_shorts_moviepy.py`
+- Wrapper: `video_generator/generate_federer_vs_nadal_h2h_scores_shorts_moviepy.py`
+- Sortie par defaut: `data/processed/tennis/federer_vs_nadal_h2h_scores_shorts.mp4`
+- Format vertical `1080x1920`, duree cible `45s`
+- Contenu: timeline de matchs Federer/Nadal avec badges de score a la place des trophées
+- Scoreboard final de reference: `16-24`
+- Le layout doit rester lisible sur mobile avec une timeline aeree et un hook tres court
+
 ## Football Goals By Age Race Shorts
 
 - Script canonique: `video_generator/football/generate_ronaldo_messi_goals_by_age_race_shorts_moviepy.py`

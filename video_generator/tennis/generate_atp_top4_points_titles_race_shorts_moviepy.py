@@ -31,7 +31,7 @@ DEFAULT_AUDIO = PROJECT_ROOT / "data" / "raw" / "audio" / "Midnight_Grip_2026040
 WIDTH = 1080
 HEIGHT = 1920
 FPS = 60
-DURATION = 40.0
+DURATION = 50.0
 TOP_N = 4
 INTRO_HOLD = 1.15
 OUTRO_HOLD = 1.5
@@ -48,7 +48,7 @@ BAR_HEIGHT = 150
 MIN_BAR_W = 92
 MAX_BAR_W = 430
 TICK_ORIGIN_X = 810
-PX_PER_DAY = 20.0
+PX_PER_DAY = 14.0
 LOGO_RADIUS = 76
 
 PLAYER_COLORS = {
@@ -196,6 +196,37 @@ def _logo_tile(path: Path, size: int) -> Image.Image:
     return tile
 
 
+def _days_between(left: datetime, right: datetime) -> float:
+    return (left - right).total_seconds() / 86400.0
+
+
+def _is_generated_fallback_logo(path: Path) -> bool:
+    if not path.exists():
+        return True
+    try:
+        img = ImageOps.exif_transpose(Image.open(path)).convert("RGB").resize((1, 1), Image.Resampling.BOX)
+    except Exception:
+        return True
+    r, g, b = img.getpixel((0, 0))
+    return b > r + 35 and b > g + 10 and g < 115
+
+
+def _wrap_text_to_width(draw: ImageDraw.ImageDraw, text: str, font: ImageFont.ImageFont, max_width: int) -> list[str]:
+    words = text.replace("-", " ").split()
+    lines: list[str] = []
+    current = ""
+    for word in words:
+        candidate = f"{current} {word}".strip()
+        if current and _text_size(draw, candidate, font)[0] > max_width:
+            lines.append(current)
+            current = word
+        else:
+            current = candidate
+    if current:
+        lines.append(current)
+    return lines[:3]
+
+
 def load_rankings(path: Path) -> list[RankingSnapshot]:
     grouped: dict[str, list[dict[str, str]]] = {}
     with path.open("r", encoding="utf-8", newline="") as handle:
@@ -292,13 +323,13 @@ def _draw_date_grid(frame: Image.Image, current_date: datetime, grid_top: int, g
         year = start_month.year + (month - 1) // 12
         month = (month - 1) % 12 + 1
         tick_date = datetime(year, month, 1)
-        x = int(round(TICK_ORIGIN_X + (tick_date - current_date).days * PX_PER_DAY))
+        x = int(round(TICK_ORIGIN_X + _days_between(tick_date, current_date) * PX_PER_DAY))
         if CHART_LEFT - 70 <= x <= WIDTH + 80:
             draw.line((x, grid_top, x, grid_bottom), fill=(255, 255, 255, 86), width=2)
             _draw_centered(draw, (x, grid_top - 32), tick_date.strftime("%b %Y"), label_font, (255, 255, 255), (18, 25, 45), 2)
         for day in [8, 15, 22]:
             minor_date = datetime(year, month, min(day, 28))
-            mx = int(round(TICK_ORIGIN_X + (minor_date - current_date).days * PX_PER_DAY))
+            mx = int(round(TICK_ORIGIN_X + _days_between(minor_date, current_date) * PX_PER_DAY))
             if CHART_LEFT - 40 <= mx <= WIDTH + 40:
                 draw.line((mx, grid_top + 96, mx, grid_bottom - 24), fill=(255, 255, 255, 24), width=1)
 
@@ -328,6 +359,33 @@ def _draw_clipped_logo_circle(
     frame.alpha_composite(layer)
 
 
+def _draw_clipped_title_circle(
+    frame: Image.Image,
+    tournament: str,
+    circle_x: int,
+    row_center: int,
+    bar_right: int,
+    outline: tuple[int, int, int],
+) -> None:
+    if circle_x <= bar_right - LOGO_RADIUS or circle_x > WIDTH + LOGO_RADIUS:
+        return
+    layer = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(layer, "RGBA")
+    bbox = (circle_x - LOGO_RADIUS, row_center - LOGO_RADIUS, circle_x + LOGO_RADIUS, row_center + LOGO_RADIUS)
+    draw.ellipse(bbox, fill=(250, 250, 253, 255), outline=(*outline, 255), width=3)
+    inner = LOGO_RADIUS * 2 - 24
+    text_font = _load_font(16, True)
+    lines = _wrap_text_to_width(draw, tournament, text_font, inner - 18)
+    line_h = 19
+    start_y = row_center - ((len(lines) - 1) * line_h) / 2
+    for idx, line in enumerate(lines):
+        _draw_centered(draw, (circle_x, int(start_y + idx * line_h)), line.upper(), text_font, (20, 30, 48), (255, 255, 255), 1)
+    clip_mask = Image.new("L", (WIDTH, HEIGHT), 0)
+    ImageDraw.Draw(clip_mask).rectangle((bar_right + 1, 0, WIDTH, HEIGHT), fill=255)
+    layer.putalpha(ImageChops.multiply(layer.getchannel("A"), clip_mask))
+    frame.alpha_composite(layer)
+
+
 def render_video(
     rankings_path: Path,
     titles_path: Path,
@@ -346,7 +404,12 @@ def render_video(
 
     players = {player for snapshot in snapshots for player in snapshot.points}
     player_cards = {player: _load_player_card(player, photos_dir) for player in players}
-    logo_cache = {event.logo_path: _logo_tile(event.logo_path, LOGO_RADIUS * 2 - 14) for event in events}
+    fallback_logos = {event.logo_path for event in events if _is_generated_fallback_logo(event.logo_path)}
+    logo_cache = {
+        event.logo_path: _logo_tile(event.logo_path, LOGO_RADIUS * 2 - 14)
+        for event in events
+        if event.logo_path not in fallback_logos
+    }
     background = _make_background()
     value_scale_max = max(max(snapshot.points.values()) for snapshot in snapshots) * 1.04
     row_centers = [ROW_TOP + i * ROW_GAP for i in range(TOP_N)]
@@ -422,11 +485,14 @@ def render_video(
             row_data = row_by_player.get(event.player)
             if row_data is None:
                 continue
-            circle_x = int(round(TICK_ORIGIN_X + (event.date - current_date).days * PX_PER_DAY))
+            circle_x = int(round(TICK_ORIGIN_X + _days_between(event.date, current_date) * PX_PER_DAY))
             if circle_x < CHART_LEFT - LOGO_RADIUS or circle_x > WIDTH + LOGO_RADIUS:
                 continue
             row_center, bar_right, color = row_data
-            _draw_clipped_logo_circle(frame, logo_cache[event.logo_path], circle_x, row_center, bar_right, color)
+            if event.logo_path in fallback_logos:
+                _draw_clipped_title_circle(frame, event.tournament, circle_x, row_center, bar_right, color)
+            else:
+                _draw_clipped_logo_circle(frame, logo_cache[event.logo_path], circle_x, row_center, bar_right, color)
 
         return np.array(frame.convert("RGB"))
 
