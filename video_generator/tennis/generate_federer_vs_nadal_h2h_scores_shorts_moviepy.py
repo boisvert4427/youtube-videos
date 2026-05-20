@@ -34,15 +34,15 @@ SCOREBOARD_BOTTOM = SCOREBOARD_TOP + 150
 SCORE_TOUCH_Y = SCOREBOARD_BOTTOM + 6
 
 TIMELINE_START_Y = 1840
-ROW_SPACING = 428
+ROW_SPACING = 642
 TIMELINE_LEFT = 0
 TIMELINE_RIGHT = WIDTH
 TIMELINE_END_PADDING = 18
 
-BADGE_W = 186
-BADGE_H = 66
+BADGE_W = 204
+BADGE_H = 78
 BADGE_GAP_X = 16
-BADGE_MARGIN_X = 38
+BADGE_MARGIN_X = 24
 BADGE_LANES = 5
 
 THEME = {
@@ -391,8 +391,19 @@ def _short_event(event: str) -> str:
     return event
 
 
+def _surface_colors(event: str) -> tuple[tuple[int, int, int], tuple[int, int, int], tuple[int, int, int]]:
+    event = event.upper()
+    if any(surface_event in event for surface_event in ("ROLAND GARROS", "MONTE CARLO", "ROME", "HAMBURG", "MADRID")):
+        return (90, 38, 22), (26, 13, 13), (230, 92, 38)
+    if "WIMBLEDON" in event:
+        return (32, 76, 47), (10, 31, 24), (116, 214, 132)
+    if any(surface_event in event for surface_event in ("ATP FINALS", "MASTERS CUP", "BASEL")):
+        return (55, 38, 91), (14, 17, 39), (168, 124, 255)
+    return (31, 56, 88), (7, 17, 34), (88, 188, 255)
+
+
 @lru_cache(maxsize=None)
-def _score_badge(scoreline: str, accent: tuple[int, int, int]) -> Image.Image:
+def _score_badge(scoreline: str, accent: tuple[int, int, int], surface_top: tuple[int, int, int], surface_bottom: tuple[int, int, int]) -> Image.Image:
     img = Image.new("RGBA", (BADGE_W, BADGE_H + 10), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img, "RGBA")
     shadow = Image.new("RGBA", img.size, (0, 0, 0, 0))
@@ -402,8 +413,8 @@ def _score_badge(scoreline: str, accent: tuple[int, int, int]) -> Image.Image:
     ImageDraw.Draw(glow, "RGBA").rounded_rectangle((2, 4, BADGE_W - 2, BADGE_H + 2), radius=18, outline=(*accent, 118), width=4)
     img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(radius=5)))
     panel = _rounded_glass((BADGE_W, BADGE_H), 18, fill_alpha=176)
-    grad = _vertical_gradient((BADGE_W, BADGE_H), (35, 45, 68), (7, 12, 25))
-    grad.putalpha(210)
+    grad = _vertical_gradient((BADGE_W, BADGE_H), surface_top, surface_bottom)
+    grad.putalpha(228)
     panel.alpha_composite(grad)
     pd = ImageDraw.Draw(panel, "RGBA")
     pd.rounded_rectangle((0, 0, BADGE_W - 1, BADGE_H - 1), radius=18, outline=(*accent, 238), width=2)
@@ -412,7 +423,7 @@ def _score_badge(scoreline: str, accent: tuple[int, int, int]) -> Image.Image:
     img.alpha_composite(panel, (0, 0))
 
     text = _short_score(scoreline)
-    font = _fit_sport_font(draw, text, BADGE_W - 24, 27, 17, bold=True, condensed=False)
+    font = _fit_sport_font(draw, text, BADGE_W - 24, 35, 22, bold=True, condensed=False)
     draw.text((BADGE_W // 2 + 2, BADGE_H // 2 + 2), text, font=font, fill=(0, 0, 0, 150), anchor="mm")
     draw.text((BADGE_W // 2, BADGE_H // 2), text, font=font, fill=(248, 251, 255, 255), anchor="mm")
     return img
@@ -521,7 +532,8 @@ def _draw_timeline(frame: Image.Image, progress: float) -> None:
             continue
 
         accent = FEDERER["accent"] if match.winner == "left" else NADAL["accent"]
-        badge = _score_badge(match.scoreline, accent)
+        surface_top, surface_bottom, surface_accent = _surface_colors(match.event)
+        badge = _score_badge(match.scoreline, accent, surface_top, surface_bottom)
         spawn_y = HEIGHT - 110
         spawn = _ease_out(_clamp((spawn_y - by) / 92.0))
         scale = 0.94 + 0.06 * spawn
@@ -536,7 +548,7 @@ def _draw_timeline(frame: Image.Image, progress: float) -> None:
         if flash > 0:
             flash_layer = Image.new("RGBA", frame.size, (0, 0, 0, 0))
             fd = ImageDraw.Draw(flash_layer, "RGBA")
-            fd.rounded_rectangle((x - 9, by - 8, x + badge.width + 9, by + badge.height + 6), radius=24, outline=(*accent, int(95 * flash)), width=4)
+            fd.rounded_rectangle((x - 9, by - 8, x + badge.width + 9, by + badge.height + 6), radius=24, outline=(*surface_accent, int(95 * flash)), width=4)
             frame.alpha_composite(flash_layer.filter(ImageFilter.GaussianBlur(radius=8)))
 
         label = f"{match.month:02d}/{match.year} - {_short_event(match.event)}"
@@ -626,7 +638,7 @@ def _draw_score_card(
     draw.rounded_rectangle((scaled[0] + 3, scaled[1] + 3, scaled[2] - 3, scaled[3] - 3), radius=24, outline=(*accent, 214), width=2)
     draw.rounded_rectangle((scaled[0] + 10, scaled[1] + 10, scaled[2] - 10, scaled[1] + 18), radius=4, fill=(*accent, 176))
 
-    score_font = _fit_sport_font(draw, str(score), int(w - 56), 106, 54, bold=True, condensed=True)
+    score_font = _fit_sport_font(draw, str(score), int(w - 46), 118, 62, bold=True, condensed=True)
     _draw_glow_text(
         frame,
         (int(cx), int(cy + 12)),
