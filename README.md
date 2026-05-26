@@ -87,12 +87,25 @@ Commandes:
    - `python scraper/basketball/build_nba_points_by_age_csv.py`
 20. Generer un Short LeBron vs Jordan vs Kobe points par age:
    - `python video_generator/basketball/generate_lebron_jordan_kobe_points_by_age_race_shorts_moviepy.py`
-21. Extraire des snapshots d'un short YouTube:
-   - `python video_tools/extract_youtube_short_snapshots.py "https://www.youtube.com/shorts/VIDEO_ID" --interval 1`
+21. Extraire des snapshots ou toutes les frames d'une video YouTube:
+   - `python video_tools/extract_youtube_short_snapshots.py "https://www.youtube.com/watch?v=VIDEO_ID" --interval 1`
+   - `python video_tools/extract_youtube_short_snapshots.py "https://www.youtube.com/watch?v=VIDEO_ID" --all-frames`
+   - `python video_tools/extract_youtube_short_snapshots.py "https://www.youtube.com/watch?v=VIDEO_ID" --all-frames --tail-seconds 40`
 22. Generer un Short Federer vs Nadal H2H en scores:
    - `python video_generator/generate_federer_vs_nadal_h2h_scores_shorts_moviepy.py`
+23. Generer un Short NBA titres par franchise en podium 2025:
+   - `python video_generator/generate_nba_championship_podium_short_moviepy.py`
+24. Generer une version Manim plus premium du podium NBA titres 2025:
+   - Preview rapide: `python video_generator/generate_nba_titles_podium_2025_manim.py --render --quality l --duration 6 --width 540 --height 960 --fps 12 --output data/processed/basketball/nba_titles_franchise_podium_2025_manim_preview.mp4`
+   - Final: `python video_generator/generate_nba_titles_podium_2025_manim.py --render --quality h --duration 80 --width 1080 --height 1920 --fps 30 --mix-audio`
+25. Generer un Short Roland-Garros cards + timeline:
+   - Preview rapide: `python video_generator/generate_roland_garros_titles_cards_timeline_shorts_moviepy.py --duration 8 --fps 30 --output data/processed/tennis/roland_garros_titles_cards_timeline_preview_8s_30fps.mp4`
+   - Final: `python video_generator/generate_roland_garros_titles_cards_timeline_shorts_moviepy.py`
+26. Generer un Short Roland-Garros ref-style cards:
+   - Preview rapide: `python video_generator/generate_roland_garros_titles_cards_refstyle_shorts_moviepy.py --duration 8 --fps 30 --output data/processed/tennis/roland_garros_titles_cards_refstyle_preview_8s.mp4`
+   - Final: `python video_generator/generate_roland_garros_titles_cards_refstyle_shorts_moviepy.py`
 
-## Snapshots Short YouTube
+## Snapshots et frames YouTube
 
 Fichiers principaux:
 
@@ -103,12 +116,16 @@ Usage:
 
 - Short YouTube: `python video_tools/extract_youtube_short_snapshots.py "https://www.youtube.com/shorts/VIDEO_ID" --interval 1`
 - Fichier local: `python video_tools/extract_youtube_short_snapshots.py data/processed/demo_short.mp4 --interval 1`
+- Toutes les frames: `python video_tools/extract_youtube_short_snapshots.py "https://www.youtube.com/watch?v=VIDEO_ID" --all-frames`
+- Les 40 dernieres secondes: `python video_tools/extract_youtube_short_snapshots.py "https://www.youtube.com/watch?v=VIDEO_ID" --all-frames --tail-seconds 40`
 
 Resultat:
 
 - PNG nommes `frame_00001.png`, `frame_00002.png`, etc.
 - `manifest.json` avec les timestamps et les chemins de sortie
 - `yt-dlp` est utilise pour telecharger une URL YouTube si besoin
+- `ffprobe` est utilise pour estimer le pas de temps quand on extrait toutes les frames
+- `ffmpeg -sseof` est utilise quand on limite l'extraction aux dernieres secondes
 
 ## Template NBA Playoff Bracket 2025
 
@@ -131,14 +148,34 @@ Comment est faite la video:
 - Bracket NBA 2025 en 3 paliers visibles: round 1, semis, conference finals
 - Les lignes blanches sont visibles des le debut, avec le centre du bracket deja raccorde au titre
 - Le titre utilise le vrai logo NBA en couleur
-- Le trophee central utilise la nouvelle image PNG du trophée sans fond visible, avec glow et matte
-- Les score badges sont jaune vif, plus grands, avec des chiffres agrandis pour rester lisibles sur mobile
-- Les logos gagnants glissent de leur seed vers leur place de bracket
-- Les equipes eliminees restent visibles en version assombrie pour conserver le contexte
-- Les seeds restent lisibles hors des logos
-- Les scores des finales de conference sont redessines au-dessus de la finale pour rester lisibles
-- La timeline est etiree pour que le dernier plan tienne seulement les 5 dernieres secondes
-- Le style visuel est inspire d'un fond split bleu / rouge avec halo central et ambience cine
+  - Le trophee central utilise la nouvelle image PNG du trophée sans fond visible, avec glow et matte
+  - Les score badges sont jaune vif, plus grands, avec des chiffres agrandis pour rester lisibles sur mobile
+  - Les logos gagnants glissent de leur seed vers leur place de bracket
+  - Les equipes eliminees restent visibles en version assombrie pour conserver le contexte
+  - Les seeds restent lisibles hors des logos
+  - Les scores des finales de conference sont redessines au-dessus de la finale pour rester lisibles
+  - La timeline est etiree pour que le dernier plan tienne seulement les 5 dernieres secondes
+  - Le style visuel est inspire d'un fond split bleu / rouge avec halo central et ambience cine
+
+## Nouveau template: NBA playoff wins without title ref-style cards
+
+Fichiers principaux:
+
+- Script principal: `video_generator/basketball/generate_nba_playoff_wins_without_title_refstyle_shorts_moviepy.py`
+- Wrapper: `video_generator/generate_nba_playoff_wins_without_title_refstyle_shorts_moviepy.py`
+- Sortie finale par defaut: `data/processed/basketball/nba_playoff_wins_without_title_refstyle_shorts.mp4`
+
+Style:
+
+- Format vertical `1080x1920`
+- Cards premium en scroll horizontal linéaire
+- Classement des joueurs NBA avec le plus de victoires en playoffs sans titre NBA
+- Mise en avant du total de victoires, du nom du joueur et de l'equipe associee
+- Le rendu garde le style ref-style des autres shorts cards, avec un header large et un bloc de contexte en bas
+
+Commande:
+
+- `python video_generator/generate_nba_playoff_wins_without_title_refstyle_shorts_moviepy.py`
 - Audio de fond par defaut: `data/raw/audio/Midnight_Grip_20260402_0828.mp3`
 
 Commandes:
@@ -199,6 +236,50 @@ Regles fixes du template Shorts:
 - Freeze fin: `4s`
 - Audio source: `data/raw/audio/audio.mp3`
 - Fade out audio final: `6s`
+
+## Nouveau template: Roland-Garros cards
+
+Fichiers principaux:
+
+- CSV: `data/processed/tennis/roland_garros_titles_top12_cards.csv`
+- Builder CSV: `python scraper/build_roland_garros_titles_cards_csv.py`
+- Video finale: `python video_generator/generate_roland_garros_titles_cards_shorts_moviepy.py`
+
+Style:
+
+- Format Shorts vertical avec cartes premium qui defilent horizontalement.
+- Donnees par defaut: vainqueurs hommes de l'Open Era classes par nombre de titres.
+- Chaque carte affiche le rang, le joueur, le pays, les annees gagnees et le premier/dernier titre.
+
+## Nouveau template: Roland-Garros cards + timeline
+
+Fichiers principaux:
+
+- CSV: `data/processed/tennis/roland_garros_titles_top12_cards.csv`
+- Builder CSV: `python scraper/build_roland_garros_titles_cards_csv.py`
+- Video finale: `python video_generator/generate_roland_garros_titles_cards_timeline_shorts_moviepy.py`
+
+Style:
+
+- Format Shorts vertical avec cartes premium qui defilent horizontalement.
+- Un panneau timeline en bas transforme le joueur central en chronologie lisible de ses titres.
+- Les donnees par defaut restent celles des vainqueurs hommes de l'Open Era classes par nombre de titres.
+- Chaque carte garde le rang, le joueur, le pays, les annees gagnees et le premier/dernier titre.
+
+## Nouveau template: Roland-Garros ref-style cards
+
+Fichiers principaux:
+
+- CSV: `data/processed/tennis/roland_garros_titles_top12_cards.csv`
+- Builder CSV: `python scraper/build_roland_garros_titles_cards_csv.py`
+- Video finale: `python video_generator/generate_roland_garros_titles_cards_refstyle_shorts_moviepy.py`
+
+Style:
+
+- Format Shorts vertical inspire du debut de la video de reference.
+- Cards larges, scroll horizontal lent, sans espace entre les cartes.
+- Chaque card garde une structure en trois blocs: photo en haut, nom au milieu, bandeau statistiques en bas.
+- Le rendu vise une lecture mobile tres claire, avec les photos conservees au bon ratio et un espace bas de frame volontairement plus respire.
 
 ## Template Paris-Nice
 

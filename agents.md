@@ -93,6 +93,54 @@ du template NBA bracket 2025.
 - Scoreboard final de reference: `16-24`
 - Le layout doit rester lisible sur mobile avec une timeline aeree et un hook tres court
 
+## Roland-Garros Cards + Timeline Shorts
+
+- Script canonique: `video_generator/tennis/generate_roland_garros_titles_cards_timeline_shorts_moviepy.py`
+- Wrapper: `video_generator/generate_roland_garros_titles_cards_timeline_shorts_moviepy.py`
+- CSV par defaut: `data/processed/tennis/roland_garros_titles_top12_cards.csv`
+- Sortie par defaut: `data/processed/tennis/roland_garros_titles_cards_timeline_shorts.mp4`
+- Format vertical `1080x1920`, duree par defaut `48s`, `60 fps`
+- Contenu: top 12 vainqueurs Open Era classes par nombre de titres, cards horizontales et panneau timeline des titres du joueur central
+- Audio de fond par defaut: `data/raw/audio/audio.mp3`
+
+### Points Sensibles
+
+- Garder le scroll des cards et le panneau timeline synchronises sur la carte centrale.
+- La timeline doit rester lisible sur mobile, avec les annees de titres en ordre chronologique.
+- Conserver les cartes existantes, le rang et le trio `premier titre / dernier titre / pays` comme repere principal.
+
+## NBA Playoff Wins Without Title Ref-Style Cards
+
+- Script canonique: `video_generator/basketball/generate_nba_playoff_wins_without_title_refstyle_shorts_moviepy.py`
+- Wrapper: `video_generator/generate_nba_playoff_wins_without_title_refstyle_shorts_moviepy.py`
+- Sortie par defaut: `data/processed/basketball/nba_playoff_wins_without_title_refstyle_shorts.mp4`
+
+Caractere du template:
+
+- Format vertical `1080x1920`
+- Scroll horizontal linéaire de cards premium
+- Classement des joueurs NBA avec le plus de victoires en playoffs sans titre NBA
+- Gros bloc statistique pour les victoires, avec le nom du joueur et l'equipe associee
+- Header large et style ref-style proche des autres shorts cards
+
+## Roland-Garros Ref-Style Cards Shorts
+
+- Script canonique: `video_generator/tennis/generate_roland_garros_titles_refstyle_shorts_moviepy.py`
+- Wrapper: `video_generator/generate_roland_garros_titles_cards_refstyle_shorts_moviepy.py`
+- CSV par defaut: `data/processed/tennis/roland_garros_titles_top12_cards.csv`
+- Sortie par defaut: `data/processed/tennis/roland_garros_titles_cards_refstyle_shorts.mp4`
+- Format vertical `1080x1920`, duree par defaut `40s`, `60 fps`
+- Contenu: top 12 vainqueurs Open Era classes par nombre de titres, avec cartes larges inspirees du debut du montage de reference
+- Audio de fond par defaut: `data/raw/audio/audio.mp3`
+
+### Points Sensibles
+
+- Garder le scroll horizontal lent et les cartes quasiment bord a bord, sans espace entre elles.
+- Conserver la lisibilite mobile avec la hiérarchie `photo / nom / statistiques`.
+- Les photos ne doivent jamais etre ecrasees; si l'asset manque, garder un placeholder propre et premium.
+- Les champs `premier titre` et `dernier titre` doivent rester dans le bloc du bas sans chevauchement.
+- La zone vide sous les cartes doit rester volontairement aeree pour rappeler l'espace respirable du montage de reference.
+
 ## Football Goals By Age Race Shorts
 
 - Script canonique: `video_generator/football/generate_ronaldo_messi_goals_by_age_race_shorts_moviepy.py`
@@ -129,6 +177,21 @@ du template NBA bracket 2025.
 - Les photos et barres doivent rester centrees dans le layout short.
 - Lors d'un changement de rang, la barre qui monte doit passer visiblement au-dessus.
 
+## Basketball NBA Titles Franchise Podium 2025
+
+- Script canonique: `video_generator/basketball/generate_nba_championship_podium_short_moviepy.py`
+- Wrapper: `video_generator/generate_nba_championship_podium_short_moviepy.py`
+- Version Manim premium: `video_generator/basketball/generate_nba_titles_podium_2025_manim.py`
+- Wrapper Manim: `video_generator/generate_nba_titles_podium_2025_manim.py`
+- Sortie par defaut: `data/processed/basketball/nba_titles_franchise_podium_2025_80s.mp4`
+- Sortie Manim par defaut: `data/processed/basketball/nba_titles_franchise_podium_2025_manim.mp4`
+- Format vertical `1080x1920`, duree par defaut `80s`
+- Contenu: classement statique 2025 des franchises NBA actives par titres, pas une bar chart race.
+- Les anciennes villes sont rattachees aux franchises actives quand c'est l'usage NBA: Lakers, Warriors, 76ers, Kings, Hawks, Wizards et Thunder/SuperSonics.
+- Les franchises actives sans titre restent visibles avec `0`; les franchises defuntes comme Baltimore Bullets 1948 ne sont pas incluses dans ce classement.
+- Le rendu doit garder un effet podium profond: faces laterales, top faces, ombres et grille de sol subtile.
+- La version Manim utilise un plate podium transparent haute resolution anime par Manim; le rendu final 1080p peut etre lent, donc verifier d'abord une preview 540x960/12fps.
+
 ## Basketball LeBron Jordan Kobe Points By Age Race Shorts
 
 - Builder CSV: `scraper/basketball/build_nba_points_by_age_csv.py`
@@ -150,13 +213,15 @@ du template NBA bracket 2025.
 - Les valeurs dans les barres sont les points cumules; les ronds affichent les points de la saison suivante par age.
 - Les donnees viennent de Basketball-Reference et peuvent evoluer pour LeBron tant que sa carriere continue.
 
-## Snapshots Short YouTube
+## Snapshots et frames YouTube
 
 - Script canonique: `video_tools/extract_youtube_short_snapshots.py`
-- Source: URL YouTube Shorts ou fichier video local
+- Source: URL YouTube Shorts / watch / youtu.be ou fichier video local
 - Sortie par defaut: `data/processed/youtube_short_snapshots/<short_id>_<timestamp>/`
 - Format de sortie: PNG + `manifest.json`
 - Dependence URL: `yt-dlp`
+- Mode complet: `--all-frames` pour extraire chaque frame decodee
+- Mode queue: `--tail-seconds 40` pour limiter l'extraction aux 40 dernieres secondes, par exemple avec `--all-frames`
 
 ## Workflow Conseille
 
