@@ -104,6 +104,12 @@ Commandes:
 26. Generer un Short Roland-Garros ref-style cards:
    - Preview rapide: `python video_generator/generate_roland_garros_titles_cards_refstyle_shorts_moviepy.py --duration 8 --fps 30 --output data/processed/tennis/roland_garros_titles_cards_refstyle_preview_8s.mp4`
    - Final: `python video_generator/generate_roland_garros_titles_cards_refstyle_shorts_moviepy.py`
+27. Generer un preview Roland-Garros cards + vrais points de match:
+   - Preview Nadal: `python video_generator/generate_roland_garros_titles_cards_matchpoint_preview_moviepy.py --url "https://www.youtube.com/watch?v=Fkv_NJLsvAU" --start 9:08 --end 9:25 --focus-player Nadal`
+   - Sortie par defaut: `data/processed/tennis/roland_garros_titles_cards_matchpoint_preview.mp4`
+   - Montage sequence 5 -> 1, avec un ecran par rang.
+   - Layout 50/50: carte plein largeur en haut, video plein largeur en bas.
+   - La video de match est active uniquement sur Nadal; les autres ecrans gardent le bas noir.
 
 ## Snapshots et frames YouTube
 

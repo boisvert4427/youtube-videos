@@ -141,6 +141,24 @@ Caractere du template:
 - Les champs `premier titre` et `dernier titre` doivent rester dans le bloc du bas sans chevauchement.
 - La zone vide sous les cartes doit rester volontairement aeree pour rappeler l'espace respirable du montage de reference.
 
+## Roland-Garros Cards + Match-Point Preview
+
+- Script canonique: `video_generator/tennis/generate_roland_garros_titles_cards_matchpoint_preview_moviepy.py`
+- Wrapper: `video_generator/generate_roland_garros_titles_cards_matchpoint_preview_moviepy.py`
+- Sortie par defaut: `data/processed/tennis/roland_garros_titles_cards_matchpoint_preview.mp4`
+- Format vertical `1080x1920`, preview cible sur un extrait YouTube telecharge avec `yt-dlp`
+- Par defaut: `https://www.youtube.com/watch?v=Fkv_NJLsvAU`, segment `9:08 -> 9:25`, focus `Nadal`
+- Montage sequence `5 -> 1`, avec un ecran par rang
+- Layout 50/50: carte plein largeur en haut, video plein largeur en bas
+- Le clip de match n'est branche que sur Nadal; les autres ecrans gardent le bas noir
+
+### Points Sensibles
+
+- Ne pas remplir les autres ecrans avec des clips de remplacement tant que le montage n'est pas valide.
+- Le clip de match doit etre branche dans l'ecran du joueur cible, pas sur la carte du classement.
+- Le rendu doit rester lisible en mobile: cartes nettes en haut, panneau video large en bas.
+- Garder le preview court et reproductible, avec cache local dans `tmp/roland_garros_matchpoint_preview/`.
+
 ## Football Goals By Age Race Shorts
 
 - Script canonique: `video_generator/football/generate_ronaldo_messi_goals_by_age_race_shorts_moviepy.py`

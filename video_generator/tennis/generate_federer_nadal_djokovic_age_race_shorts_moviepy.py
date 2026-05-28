@@ -22,10 +22,10 @@ from video_generator.generate_ucl_barchart_race_moviepy import (
 )
 
 
-DEFAULT_OUTPUT = PROJECT_ROOT / "data" / "processed" / "tennis" / "nadal_djokovic_federer_grand_slam_titles_by_age.mp4"
+DEFAULT_OUTPUT = PROJECT_ROOT / "data" / "processed" / "tennis" / "federer_nadal_djokovic_sinner_alcaraz_grand_slam_titles_by_age.mp4"
 DEFAULT_PHOTOS_DIR = PROJECT_ROOT / "data" / "raw" / "player_photos"
 DEFAULT_LOGOS_DIR = PROJECT_ROOT / "data" / "raw" / "tennis_logos"
-DEFAULT_PREVIEW = PROJECT_ROOT / "tmp_frames" / "federer_nadal_djokovic_age_race_preview.png"
+DEFAULT_PREVIEW = PROJECT_ROOT / "tmp_frames" / "federer_nadal_djokovic_sinner_alcaraz_age_race_preview.png"
 
 WIDTH = 1080
 HEIGHT = 1920
@@ -39,7 +39,7 @@ OUTRO_HOLD = 1.35
 TOTAL_DURATION = 40.0
 VALUE_SCALE_MAX = 24.0
 
-TITLE = "NADAL vs DJOKOVIC vs FEDERER"
+TITLE = "FEDERER • NADAL • DJOKOVIC • SINNER • ALCARAZ"
 SUBTITLE = "Grand Slam Titles by Age"
 FOOTER = "Tennis Clash"
 
@@ -53,11 +53,15 @@ ROW_CENTER_OFFSET = 0
 FEDERER_COLOR = "#F4F1E8"
 NADAL_COLOR = "#F11D2A"
 DJOKOVIC_COLOR = "#F3C94F"
+SINNER_COLOR = "#6AD3FF"
+ALCARAZ_COLOR = "#22C081"
 
 PLAYER_TIE_ORDER = {
-    "Rafael Nadal": 0,
-    "Novak Djokovic": 1,
-    "Roger Federer": 2,
+    "Roger Federer": 0,
+    "Rafael Nadal": 1,
+    "Novak Djokovic": 2,
+    "Jannik Sinner": 3,
+    "Carlos Alcaraz": 4,
 }
 
 TOURNAMENT_LOGO_FILES = {
@@ -79,6 +83,35 @@ class Player:
 
 
 PLAYERS = [
+    Player(
+        name="Roger Federer",
+        short="FEDERER",
+        photo_name="roger_federer.jpg",
+        color=FEDERER_COLOR,
+        counts={
+            17: 0,
+            18: 0,
+            19: 0,
+            20: 0,
+            21: 1,
+            22: 3,
+            23: 6,
+            24: 7,
+            25: 10,
+            26: 12,
+            27: 13,
+            28: 16,
+            29: 16,
+            30: 16,
+            31: 17,
+            32: 17,
+            33: 17,
+            34: 17,
+            35: 18,
+            36: 20,
+            37: 20,
+        },
+    ),
     Player(
         name="Rafael Nadal",
         short="NADAL",
@@ -138,37 +171,79 @@ PLAYERS = [
         },
     ),
     Player(
-        name="Roger Federer",
-        short="FEDERER",
-        photo_name="roger_federer.jpg",
-        color=FEDERER_COLOR,
+        name="Jannik Sinner",
+        short="SINNER",
+        photo_name="jannik_sinner.jpg",
+        color=SINNER_COLOR,
         counts={
             17: 0,
             18: 0,
             19: 0,
             20: 0,
-            21: 1,
-            22: 3,
-            23: 6,
+            21: 0,
+            22: 1,
+            23: 4,
+            24: 4,
+            25: 4,
+            26: 4,
+            27: 4,
+            28: 4,
+            29: 4,
+            30: 4,
+            31: 4,
+            32: 4,
+            33: 4,
+            34: 4,
+            35: 4,
+            36: 4,
+            37: 4,
+        },
+    ),
+    Player(
+        name="Carlos Alcaraz",
+        short="ALCARAZ",
+        photo_name="carlos_alcaraz.jpg",
+        color=ALCARAZ_COLOR,
+        counts={
+            17: 0,
+            18: 0,
+            19: 1,
+            20: 2,
+            21: 4,
+            22: 7,
+            23: 7,
             24: 7,
-            25: 10,
-            26: 12,
-            27: 13,
-            28: 16,
-            29: 16,
-            30: 16,
-            31: 17,
-            32: 17,
-            33: 17,
-            34: 17,
-            35: 18,
-            36: 20,
-            37: 20,
+            25: 7,
+            26: 7,
+            27: 7,
+            28: 7,
+            29: 7,
+            30: 7,
+            31: 7,
+            32: 7,
+            33: 7,
+            34: 7,
+            35: 7,
+            36: 7,
+            37: 7,
         },
     ),
 ]
 
 SEGMENT_SLAMS: dict[str, dict[int, list[str]]] = {
+    "Roger Federer": {
+        20: ["WIM"],
+        21: ["AO", "WIM"],
+        22: ["USO", "WIM", "USO"],
+        23: ["AO"],
+        24: ["WIM", "USO", "AO"],
+        25: ["WIM", "USO"],
+        26: ["USO"],
+        27: ["RG", "WIM", "AO"],
+        30: ["WIM"],
+        34: ["AO"],
+        35: ["WIM", "AO"],
+    },
     "Rafael Nadal": {
         18: ["RG"],
         19: ["RG"],
@@ -201,18 +276,15 @@ SEGMENT_SLAMS: dict[str, dict[int, list[str]]] = {
         34: ["WIM"],
         35: ["AO", "RG", "USO"],
     },
-    "Roger Federer": {
+    "Jannik Sinner": {
+        22: ["AO"],
+        23: ["USO", "AO", "WIM"],
+    },
+    "Carlos Alcaraz": {
+        19: ["USO"],
         20: ["WIM"],
-        21: ["AO", "WIM"],
-        22: ["USO", "WIM", "USO"],
-        23: ["AO"],
-        24: ["WIM", "USO", "AO"],
-        25: ["WIM", "USO"],
-        26: ["USO"],
-        27: ["RG", "WIM", "AO"],
-        30: ["WIM"],
-        34: ["AO"],
-        35: ["WIM", "AO"],
+        21: ["RG", "WIM"],
+        22: ["RG", "USO", "AO"],
     },
 }
 
@@ -381,19 +453,19 @@ def _load_player_photo(photos_dir: Path, player: Player, size: int) -> Image.Ima
 
 
 def _build_player_card(player: Player, photos_dir: Path) -> Image.Image:
-    card_size = 250
-    photo_size = 224
+    card_size = 186
+    photo_size = 162
     canvas = Image.new("RGBA", (card_size, card_size), (0, 0, 0, 0))
 
     shadow = Image.new("RGBA", (card_size, card_size), (0, 0, 0, 0))
     shadow_draw = ImageDraw.Draw(shadow, "RGBA")
-    shadow_draw.rounded_rectangle((10, 12, card_size - 10, card_size - 8), radius=40, fill=(0, 0, 0, 72))
+    shadow_draw.rounded_rectangle((10, 12, card_size - 12, card_size - 10), radius=32, fill=(0, 0, 0, 72))
     shadow = shadow.filter(ImageFilter.GaussianBlur(radius=8))
     canvas.alpha_composite(shadow)
 
     draw = ImageDraw.Draw(canvas, "RGBA")
-    draw.rounded_rectangle((0, 0, card_size - 18, card_size - 18), radius=40, fill=(255, 255, 255, 245))
-    draw.rounded_rectangle((5, 5, card_size - 23, card_size - 23), radius=34, fill=(255, 255, 255, 255))
+    draw.rounded_rectangle((0, 0, card_size - 18, card_size - 18), radius=30, fill=(255, 255, 255, 245))
+    draw.rounded_rectangle((5, 5, card_size - 23, card_size - 23), radius=24, fill=(255, 255, 255, 255))
 
     photo = _load_player_photo(photos_dir, player, photo_size)
     if photo is not None:
@@ -414,8 +486,8 @@ def _build_player_card(player: Player, photos_dir: Path) -> Image.Image:
         )
         canvas.paste(fallback, (11, 11))
 
-    draw.rounded_rectangle((0, 0, card_size - 18, card_size - 18), radius=40, outline=(255, 255, 255, 255), width=3)
-    draw.rounded_rectangle((6, 6, card_size - 24, card_size - 24), radius=34, outline=(255, 255, 255, 220), width=1)
+    draw.rounded_rectangle((0, 0, card_size - 18, card_size - 18), radius=30, outline=(255, 255, 255, 255), width=3)
+    draw.rounded_rectangle((6, 6, card_size - 24, card_size - 24), radius=24, outline=(255, 255, 255, 220), width=1)
     return canvas
 
 
@@ -709,11 +781,13 @@ def _render_scene(
                 stroke_fill=stroke,
             )
 
-    row_centers = [
-        520 + BLOCK_SHIFT + ROW_CENTER_OFFSET,
-        820 + BLOCK_SHIFT + ROW_CENTER_OFFSET,
-        1120 + BLOCK_SHIFT + ROW_CENTER_OFFSET,
-    ]
+    row_top = 500 + BLOCK_SHIFT + ROW_CENTER_OFFSET
+    row_bottom = 1410 + BLOCK_SHIFT + ROW_CENTER_OFFSET
+    if len(PLAYERS) == 1:
+        row_centers = [int(round((row_top + row_bottom) / 2))]
+    else:
+        dynamic_gap = (row_bottom - row_top) / (len(PLAYERS) - 1)
+        row_centers = [int(round(row_top + dynamic_gap * index)) for index in range(len(PLAYERS))]
     low_age = int(math.floor(current_age))
     rank_map = _interpolated_rank_map(current_age)
     previous_rank_map = _rank_map_at_age(low_age)
@@ -726,11 +800,11 @@ def _render_scene(
     rows.sort(key=lambda item: (item[0], PLAYER_TIE_ORDER[item[1].name]))
 
     min_bar_w = 70
-    max_bar_w = 430
+    max_bar_w = 468
     bar_area_left = chart_left + 8
     bar_area_right = chart_right - 48
     _ = bar_area_right  # keep the intended spacing explicit.
-    row_gap = row_centers[1] - row_centers[0]
+    row_gap = row_centers[1] - row_centers[0] if len(row_centers) > 1 else 1
     render_rows = sorted(
         rows,
         key=lambda item: (
@@ -758,7 +832,7 @@ def _render_scene(
         card_y = int(row_center - card.height / 2)
         frame.alpha_composite(card, (card_x, card_y))
 
-        bar_h = 176
+        bar_h = 134
         bar_w = int(min_bar_w + (count / VALUE_SCALE_MAX) * (max_bar_w - min_bar_w))
         bar_w = max(min_bar_w, min(max_bar_w, bar_w))
         bar_top = int(row_center - bar_h / 2)
@@ -831,7 +905,7 @@ def render_video(
     duration: float,
     fps: int,
     preview_image: Path | None = None,
-    preview_age: float = 29.0,
+    preview_age: float = 23.0,
 ) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     photos_dir.mkdir(parents=True, exist_ok=True)
@@ -842,11 +916,12 @@ def render_video(
         for player in PLAYERS
     }
 
-    title_font = _load_font(50, bold=True)
-    subtitle_font = _load_font(26, bold=True)
+    probe_draw = ImageDraw.Draw(Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0)))
+    title_font = _fit_font_size(probe_draw, TITLE, WIDTH - 120, 50, 24, bold=True)
+    subtitle_font = _fit_font_size(probe_draw, SUBTITLE, 300, 26, 18, bold=True)
     age_font = _load_font(34, bold=True)
     age_active_font = _load_font(38, bold=True)
-    value_font = _load_font(64, bold=True)
+    value_font = _load_font(54, bold=True)
     footer_font = _load_font(22, bold=True)
 
     def make_frame(t: float) -> np.ndarray:
@@ -904,7 +979,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--duration", type=float, default=TOTAL_DURATION)
     parser.add_argument("--fps", type=int, default=FPS)
     parser.add_argument("--preview-image", type=Path, default=DEFAULT_PREVIEW)
-    parser.add_argument("--preview-age", type=float, default=29.0)
+    parser.add_argument("--preview-age", type=float, default=23.0)
     return parser.parse_args()
 
 

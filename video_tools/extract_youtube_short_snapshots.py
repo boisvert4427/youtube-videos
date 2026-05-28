@@ -77,6 +77,51 @@ def _run_command(command: list[str], *, label: str) -> subprocess.CompletedProce
     return result
 
 
+def _parse_frame_rate(raw_value: str) -> float:
+    value = raw_value.strip()
+    if not value or value.upper() == "N/A":
+        return 0.0
+
+    if "/" in value:
+        numerator_text, denominator_text = value.split("/", 1)
+        numerator = float(numerator_text)
+        denominator = float(denominator_text)
+        if denominator == 0:
+            return 0.0
+        return numerator / denominator
+
+    return float(value)
+
+
+def _probe_frame_rate(video_path: Path) -> float:
+    ffprobe = shutil.which("ffprobe")
+    if not ffprobe:
+        return 30.0
+
+    for stream_rate_key in ("avg_frame_rate", "r_frame_rate"):
+        command = [
+            ffprobe,
+            "-v",
+            "error",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            f"stream={stream_rate_key}",
+            "-of",
+            "csv=p=0",
+            str(video_path),
+        ]
+        result = _run_command(command, label="ffprobe")
+        try:
+            frame_rate = _parse_frame_rate(result.stdout)
+        except ValueError:
+            frame_rate = 0.0
+        if frame_rate > 0:
+            return frame_rate
+
+    return 30.0
+
+
 def _download_youtube_video(url: str, download_dir: Path) -> Path:
     download_dir.mkdir(parents=True, exist_ok=True)
     command = [
@@ -130,7 +175,14 @@ def _ensure_empty_output_dir(output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
 
-def _extract_snapshots(video_path: Path, output_dir: Path, interval_seconds: float) -> list[Path]:
+def _extract_images(
+    video_path: Path,
+    output_dir: Path,
+    interval_seconds: float,
+    *,
+    all_frames: bool,
+    tail_seconds: float | None,
+) -> list[Path]:
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:
         raise RuntimeError("ffmpeg est requis pour extraire les snapshots, mais il n'est pas disponible.")
@@ -138,24 +190,30 @@ def _extract_snapshots(video_path: Path, output_dir: Path, interval_seconds: flo
     _ensure_empty_output_dir(output_dir)
 
     output_pattern = output_dir / "frame_%05d.png"
-    fps_value = 1.0 / interval_seconds
     command = [
         ffmpeg,
         "-hide_banner",
         "-loglevel",
         "error",
         "-y",
+    ]
+    if tail_seconds is not None:
+        command.extend(["-sseof", f"-{tail_seconds:.10g}"])
+    command.extend([
         "-i",
         str(video_path),
-        "-vf",
-        f"fps={fps_value:.10g}",
-        str(output_pattern),
-    ]
+    ])
+    if all_frames:
+        command.extend(["-vsync", "0", "-start_number", "1"])
+    else:
+        fps_value = 1.0 / interval_seconds
+        command.extend(["-vf", f"fps={fps_value:.10g}"])
+    command.append(str(output_pattern))
     _run_command(command, label="ffmpeg")
 
     frames = sorted(output_dir.glob("frame_*.png"))
     if not frames:
-        raise RuntimeError("Aucun snapshot n'a ete genere.")
+        raise RuntimeError("Aucune image n'a ete generee.")
     return frames
 
 
@@ -166,6 +224,8 @@ def _build_manifest(
     source_label: str,
     source_path: Path | None,
     output_dir: Path,
+    extraction_mode: str,
+    tail_seconds: float | None,
     interval_seconds: float,
     frame_files: list[Path],
 ) -> dict[str, object]:
@@ -184,6 +244,8 @@ def _build_manifest(
         "tool": "video_tools/extract_youtube_short_snapshots.py",
         "created_at": datetime.now().astimezone().isoformat(),
         "output_dir": str(output_dir),
+        "extraction_mode": extraction_mode,
+        "tail_seconds": tail_seconds,
         "interval_seconds": interval_seconds,
         "frame_count": len(frame_files),
         "image_format": "png",
@@ -215,7 +277,7 @@ def _resolve_local_source(source: str) -> Path:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Extrait des snapshots reguliers depuis un short YouTube ou une video locale."
+        description="Extrait des snapshots reguliers ou toutes les frames d'une video YouTube ou locale."
     )
     parser.add_argument(
         "source",
@@ -226,6 +288,17 @@ def main(argv: list[str] | None = None) -> int:
         type=float,
         default=1.0,
         help="Intervalle entre snapshots, en secondes. Defaut: 1.0.",
+    )
+    parser.add_argument(
+        "--all-frames",
+        action="store_true",
+        help="Extrait chaque frame decodee de la video au lieu d'un snapshot a intervalle fixe.",
+    )
+    parser.add_argument(
+        "--tail-seconds",
+        type=float,
+        default=None,
+        help="N'extrait que les N dernieres secondes de la video avant de la decouper. Defaut: tout le clip.",
     )
     parser.add_argument(
         "--output-dir",
@@ -240,6 +313,8 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.interval <= 0:
         parser.error("--interval doit etre strictement superieur a 0.")
+    if args.tail_seconds is not None and args.tail_seconds <= 0:
+        parser.error("--tail-seconds doit etre strictement superieur a 0.")
 
     source_label = _label_from_source(args.source)
     output_dir = (
@@ -253,36 +328,67 @@ def main(argv: list[str] | None = None) -> int:
         with tempfile.TemporaryDirectory(prefix=f"yt_short_{source_label}_") as temp_dir_name:
             temp_dir = Path(temp_dir_name)
             downloaded_path = _download_youtube_video(args.source, temp_dir)
-            frame_files = _extract_snapshots(downloaded_path, output_dir, args.interval)
+            effective_interval_seconds = (
+                1.0 / _probe_frame_rate(downloaded_path) if args.all_frames else args.interval
+            )
+            frame_files = _extract_images(
+                downloaded_path,
+                output_dir,
+                effective_interval_seconds,
+                all_frames=args.all_frames,
+                tail_seconds=args.tail_seconds,
+            )
             manifest = _build_manifest(
                 source_kind=source_kind,
                 source_value=args.source,
                 source_label=source_label,
                 source_path=None,
                 output_dir=output_dir,
-                interval_seconds=args.interval,
+                extraction_mode="all_frames" if args.all_frames else "interval_snapshots",
+                tail_seconds=args.tail_seconds,
+                interval_seconds=effective_interval_seconds,
                 frame_files=frame_files,
             )
     else:
         source_kind = "local_file"
         local_path = _resolve_local_source(args.source)
-        frame_files = _extract_snapshots(local_path, output_dir, args.interval)
+        effective_interval_seconds = (
+            1.0 / _probe_frame_rate(local_path) if args.all_frames else args.interval
+        )
+        frame_files = _extract_images(
+            local_path,
+            output_dir,
+            effective_interval_seconds,
+            all_frames=args.all_frames,
+            tail_seconds=args.tail_seconds,
+        )
         manifest = _build_manifest(
             source_kind=source_kind,
             source_value=args.source,
             source_label=source_label,
             source_path=local_path,
             output_dir=output_dir,
-            interval_seconds=args.interval,
+            extraction_mode="all_frames" if args.all_frames else "interval_snapshots",
+            tail_seconds=args.tail_seconds,
+            interval_seconds=effective_interval_seconds,
             frame_files=frame_files,
         )
 
     manifest_path = output_dir / "manifest.json"
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
 
-    print(f"[video_tools] {len(frame_files)} snapshots extraits -> {output_dir}")
+    if args.all_frames:
+        print(f"[video_tools] {len(frame_files)} frames extraites -> {output_dir}")
+    else:
+        print(f"[video_tools] {len(frame_files)} snapshots extraits -> {output_dir}")
     print(f"[video_tools] manifest -> {manifest_path}")
-    print(f"[video_tools] intervalle -> {args.interval} s")
+    if args.all_frames:
+        print(f"[video_tools] mode -> all_frames")
+        print(f"[video_tools] intervalle estime -> {effective_interval_seconds:.6f} s")
+    else:
+        print(f"[video_tools] intervalle -> {args.interval} s")
+    if args.tail_seconds is not None:
+        print(f"[video_tools] queue video -> {args.tail_seconds:.3f} s")
     if frame_files:
         print(f"[video_tools] premier snapshot -> {frame_files[0].name}")
         print(f"[video_tools] dernier snapshot -> {frame_files[-1].name}")

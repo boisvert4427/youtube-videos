@@ -19,7 +19,7 @@ from video_generator.generate_ucl_barchart_race_moviepy import (
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 PHOTOS_DIR = PROJECT_ROOT / "data" / "raw" / "player_photos"
-DEFAULT_OUTPUT = PROJECT_ROOT / "data" / "processed" / "tennis" / "federer_vs_nadal_h2h_scores_shorts.mp4"
+DEFAULT_OUTPUT = PROJECT_ROOT / "data" / "processed" / "tennis" / "federer_vs_djokovic_h2h_scores_shorts.mp4"
 
 WIDTH = 1080
 HEIGHT = 1920
@@ -39,11 +39,11 @@ TIMELINE_LEFT = 0
 TIMELINE_RIGHT = WIDTH
 TIMELINE_END_PADDING = 18
 
-BADGE_W = 204
+BADGE_W = 166
 BADGE_H = 78
-BADGE_GAP_X = 16
-BADGE_MARGIN_X = 24
-BADGE_LANES = 5
+BADGE_GAP_X = 28
+BADGE_MARGIN_X = 12
+BADGE_LANES = 9
 
 THEME = {
     "paper": (244, 248, 255),
@@ -55,17 +55,19 @@ THEME = {
     "center": (219, 237, 255),
     "fed": (82, 215, 255),
     "fed_2": (126, 94, 255),
+    "djokovic": (243, 201, 79),
+    "djokovic_2": (173, 132, 33),
     "nadal": (255, 115, 61),
     "nadal_2": (214, 47, 35),
 }
 
-FEDERER = {
+LEFT_PLAYER = {
     "photo": "roger_federer.jpg",
     "accent": THEME["fed"],
 }
-NADAL = {
-    "photo": "rafael_nadal.jpg",
-    "accent": THEME["nadal"],
+RIGHT_PLAYER = {
+    "photo": "novak_djokovic.jpg",
+    "accent": THEME["djokovic"],
 }
 
 
@@ -79,49 +81,59 @@ class MatchEntry:
 
 
 MATCHES: list[MatchEntry] = [
-    MatchEntry(2004, 3, "MIAMI R3", "right", "6-3 6-3"),
-    MatchEntry(2005, 4, "MIAMI F", "left", "2-6 6-7 7-6 6-3 6-1"),
-    MatchEntry(2005, 6, "ROLAND GARROS SF", "right", "6-3 4-6 6-4 6-3"),
-    MatchEntry(2006, 3, "DUBAI F", "right", "2-6 6-4 6-4"),
-    MatchEntry(2006, 4, "MONTE CARLO F", "right", "6-2 6-7 6-3 7-6"),
-    MatchEntry(2006, 5, "ROME F", "right", "6-7 7-6 6-4 2-6 7-6"),
-    MatchEntry(2006, 6, "ROLAND GARROS F", "right", "1-6 6-1 6-4 7-6"),
-    MatchEntry(2006, 7, "WIMBLEDON F", "left", "6-0 7-6 6-7 6-3"),
-    MatchEntry(2006, 11, "MASTERS CUP SF", "left", "6-4 7-5"),
-    MatchEntry(2007, 4, "MONTE CARLO F", "right", "6-4 6-4"),
-    MatchEntry(2007, 5, "HAMBURG F", "left", "2-6 6-2 6-0"),
-    MatchEntry(2007, 6, "ROLAND GARROS F", "right", "6-3 4-6 6-3 6-4"),
-    MatchEntry(2007, 7, "WIMBLEDON F", "left", "7-6 4-6 7-6 2-6 6-2"),
-    MatchEntry(2007, 11, "MASTERS CUP SF", "left", "6-4 6-1"),
-    MatchEntry(2008, 4, "MONTE CARLO F", "right", "7-5 7-5"),
-    MatchEntry(2008, 5, "HAMBURG F", "right", "7-5 6-7 6-3"),
-    MatchEntry(2008, 6, "ROLAND GARROS F", "right", "6-1 6-3 6-0"),
-    MatchEntry(2008, 7, "WIMBLEDON F", "right", "6-4 6-4 6-7 6-7 9-7"),
-    MatchEntry(2009, 2, "AUSTRALIAN OPEN F", "right", "7-5 3-6 7-6 3-6 6-2"),
-    MatchEntry(2009, 5, "MADRID F", "left", "6-4 6-4"),
-    MatchEntry(2010, 5, "MADRID F", "right", "6-4 7-6"),
-    MatchEntry(2010, 11, "ATP FINALS F", "left", "6-3 3-6 6-1"),
-    MatchEntry(2011, 4, "MIAMI SF", "right", "6-3 6-2"),
-    MatchEntry(2011, 5, "MADRID SF", "right", "5-7 6-1 6-3"),
-    MatchEntry(2011, 6, "ROLAND GARROS F", "right", "7-5 7-6 5-7 6-1"),
-    MatchEntry(2011, 11, "ATP FINALS RR", "left", "6-3 6-0"),
-    MatchEntry(2012, 1, "AUSTRALIAN OPEN SF", "right", "6-7 6-2 7-6 6-4"),
-    MatchEntry(2012, 3, "INDIAN WELLS SF", "left", "6-3 6-4"),
-    MatchEntry(2013, 3, "INDIAN WELLS QF", "right", "6-4 6-2"),
-    MatchEntry(2013, 5, "ROME F", "right", "6-1 6-3"),
-    MatchEntry(2013, 8, "CINCINNATI QF", "right", "5-7 6-4 6-3"),
-    MatchEntry(2013, 11, "ATP FINALS SF", "right", "7-5 6-3"),
-    MatchEntry(2014, 1, "AUSTRALIAN OPEN SF", "right", "7-6 6-3 6-3"),
-    MatchEntry(2015, 11, "BASEL F", "left", "6-3 5-7 6-3"),
-    MatchEntry(2017, 1, "AUSTRALIAN OPEN F", "left", "6-4 3-6 6-1 3-6 6-3"),
-    MatchEntry(2017, 3, "INDIAN WELLS R4", "left", "6-2 6-3"),
-    MatchEntry(2017, 4, "MIAMI F", "left", "6-3 6-4"),
-    MatchEntry(2017, 10, "SHANGHAI F", "left", "6-4 6-3"),
-    MatchEntry(2019, 6, "ROLAND GARROS SF", "right", "6-3 6-4 6-2"),
-    MatchEntry(2019, 7, "WIMBLEDON SF", "left", "7-6 1-6 6-3 6-4"),
+    MatchEntry(2006, 4, "MONTE CARLO R64", "left", "6-3 2-6 6-3"),
+    MatchEntry(2006, 9, "DAVIS CUP WG PO", "left", "6-3 6-2 6-3"),
+    MatchEntry(2007, 1, "AUSTRALIAN OPEN R16", "left", "6-2 7-5 6-3"),
+    MatchEntry(2007, 2, "DUBAI QF", "left", "6-3 6-7 6-3"),
+    MatchEntry(2007, 8, "CANADA F", "right", "7-6 2-6 7-6"),
+    MatchEntry(2007, 9, "US OPEN F", "left", "7-6 7-6 6-4"),
+    MatchEntry(2008, 1, "AUSTRALIAN OPEN SF", "right", "7-5 6-3 7-6"),
+    MatchEntry(2008, 4, "MONTE CARLO SF", "left", "6-3 3-2"),
+    MatchEntry(2008, 9, "US OPEN SF", "left", "6-3 5-7 7-5 6-2"),
+    MatchEntry(2009, 3, "MIAMI SF", "right", "3-6 6-2 6-3"),
+    MatchEntry(2009, 5, "ROME SF", "right", "4-6 6-3 6-3"),
+    MatchEntry(2009, 8, "CINCINNATI F", "left", "6-1 7-5"),
+    MatchEntry(2009, 9, "US OPEN SF", "left", "7-6 7-5 7-5"),
+    MatchEntry(2009, 11, "BASEL F", "right", "6-4 4-6 6-2"),
+    MatchEntry(2010, 8, "CANADA SF", "left", "6-1 3-6 7-5"),
+    MatchEntry(2010, 9, "US OPEN SF", "right", "5-7 6-1 5-7 6-2 7-5"),
+    MatchEntry(2010, 10, "SHANGHAI SF", "left", "7-5 6-4"),
+    MatchEntry(2010, 11, "BASEL F", "left", "6-4 3-6 6-1"),
+    MatchEntry(2010, 11, "ATP FINALS SF", "left", "6-1 6-4"),
+    MatchEntry(2011, 1, "AUSTRALIAN OPEN SF", "right", "7-6 7-5 6-4"),
+    MatchEntry(2011, 2, "DUBAI F", "right", "6-3 6-3"),
+    MatchEntry(2011, 3, "INDIAN WELLS SF", "right", "6-3 3-6 6-2"),
+    MatchEntry(2011, 6, "ROLAND GARROS SF", "left", "7-6 6-3 3-6 7-6"),
+    MatchEntry(2011, 9, "US OPEN SF", "right", "6-7 4-6 6-3 6-2 7-5"),
+    MatchEntry(2012, 5, "ROME SF", "right", "6-2 7-6"),
+    MatchEntry(2012, 6, "ROLAND GARROS SF", "right", "6-4 7-5 6-3"),
+    MatchEntry(2012, 7, "WIMBLEDON SF", "left", "6-3 3-6 6-4 6-3"),
+    MatchEntry(2012, 8, "CINCINNATI F", "left", "6-0 7-6"),
+    MatchEntry(2012, 11, "ATP FINALS F", "right", "7-6 7-5"),
+    MatchEntry(2013, 11, "PARIS SF", "right", "4-6 6-3 6-2"),
+    MatchEntry(2013, 11, "ATP FINALS RR", "right", "6-4 6-7 6-2"),
+    MatchEntry(2014, 2, "DUBAI SF", "left", "3-6 6-3 6-2"),
+    MatchEntry(2014, 3, "INDIAN WELLS F", "right", "3-6 6-3 7-6"),
+    MatchEntry(2014, 4, "MONTE CARLO SF", "left", "7-5 6-2"),
+    MatchEntry(2014, 7, "WIMBLEDON F", "right", "6-7 6-4 7-6 5-7 6-4"),
+    MatchEntry(2014, 10, "SHANGHAI SF", "left", "6-4 6-4"),
+    MatchEntry(2015, 2, "DUBAI F", "left", "6-3 7-5"),
+    MatchEntry(2015, 3, "INDIAN WELLS F", "right", "6-3 6-7 6-2"),
+    MatchEntry(2015, 5, "ROME F", "right", "6-4 6-3"),
+    MatchEntry(2015, 7, "WIMBLEDON F", "right", "7-6 6-7 6-4 6-3"),
+    MatchEntry(2015, 8, "CINCINNATI F", "left", "7-6 6-3"),
+    MatchEntry(2015, 9, "US OPEN F", "right", "6-4 5-7 6-4 6-4"),
+    MatchEntry(2015, 11, "ATP FINALS RR", "left", "7-5 6-2"),
+    MatchEntry(2015, 11, "ATP FINALS F", "right", "6-3 6-4"),
+    MatchEntry(2016, 1, "AUSTRALIAN OPEN SF", "right", "6-1 6-2 3-6 6-3"),
+    MatchEntry(2018, 8, "CINCINNATI F", "right", "6-4 6-4"),
+    MatchEntry(2018, 11, "PARIS SF", "right", "7-6 5-7 7-6"),
+    MatchEntry(2019, 7, "WIMBLEDON F", "right", "7-6 1-6 7-6 4-6 13-12"),
+    MatchEntry(2019, 11, "ATP FINALS RR", "left", "6-4 6-3"),
+    MatchEntry(2020, 1, "AUSTRALIAN OPEN SF", "right", "7-6 6-4 6-3"),
 ]
 
-YEARS = list(range(2004, 2020))
+YEARS = list(range(2006, 2021))
 MONTH_LABELS = ("JAN", "FEV", "MAR", "AVR", "MAI", "JUN", "JUL", "AOU", "SEP", "OCT", "NOV", "DEC")
 
 
@@ -218,39 +230,35 @@ def _make_background() -> Image.Image:
     yy = np.linspace(0, 1, HEIGHT, dtype=np.float32)
     grid_x, grid_y = np.meshgrid(xx, yy)
 
-    left_top = np.array([14, 18, 44], dtype=np.float32)
-    left_mid = np.array([34, 21, 71], dtype=np.float32)
-    left_bottom = np.array([5, 23, 42], dtype=np.float32)
-    right_top = np.array([8, 18, 36], dtype=np.float32)
-    right_mid = np.array([28, 33, 52], dtype=np.float32)
-    right_bottom = np.array([53, 23, 20], dtype=np.float32)
+    left_top = np.array([38, 30, 82], dtype=np.float32)
+    left_mid = np.array([82, 48, 126], dtype=np.float32)
+    left_bottom = np.array([14, 54, 84], dtype=np.float32)
+    right_top = np.array([20, 45, 86], dtype=np.float32)
+    right_mid = np.array([66, 74, 104], dtype=np.float32)
+    right_bottom = np.array([98, 47, 37], dtype=np.float32)
     left = left_top * (1.0 - grid_y[..., None]) + left_bottom * grid_y[..., None]
     right = right_top * (1.0 - grid_y[..., None]) + right_bottom * grid_y[..., None]
-    left += left_mid * (0.42 * np.exp(-((grid_y - 0.42) ** 2 + (grid_x - 0.22) ** 2) / 0.12))[..., None]
-    right += right_mid * (0.40 * np.exp(-((grid_y - 0.45) ** 2 + (grid_x - 0.76) ** 2) / 0.12))[..., None]
+    left += left_mid * (0.34 * np.exp(-((grid_y - 0.42) ** 2 + (grid_x - 0.22) ** 2) / 0.12))[..., None]
+    right += right_mid * (0.32 * np.exp(-((grid_y - 0.45) ** 2 + (grid_x - 0.76) ** 2) / 0.12))[..., None]
 
-    fed_cyan = np.array(THEME["fed"], dtype=np.float32)
-    fed_violet = np.array(THEME["fed_2"], dtype=np.float32)
-    nadal_orange = np.array(THEME["nadal"], dtype=np.float32)
-    nadal_red = np.array(THEME["nadal_2"], dtype=np.float32)
-    left += fed_cyan * (0.20 * np.exp(-((grid_y - 0.26) ** 2 + (grid_x - 0.25) ** 2) / 0.018))[..., None]
-    left += fed_violet * (0.16 * np.exp(-((grid_y - 0.58) ** 2 + (grid_x - 0.03) ** 2) / 0.11))[..., None]
-    right += nadal_orange * (0.18 * np.exp(-((grid_y - 0.26) ** 2 + (grid_x - 0.78) ** 2) / 0.020))[..., None]
-    right += nadal_red * (0.14 * np.exp(-((grid_y - 0.78) ** 2 + (grid_x - 0.98) ** 2) / 0.10))[..., None]
+    left_accent = np.array(THEME["nadal"], dtype=np.float32)
+    right_accent = np.array(THEME["djokovic"], dtype=np.float32)
+    left += left_accent * (0.12 * np.exp(-((grid_y - 0.28) ** 2 + (grid_x - 0.24) ** 2) / 0.026))[..., None]
+    right += right_accent * (0.15 * np.exp(-((grid_y - 0.28) ** 2 + (grid_x - 0.76) ** 2) / 0.026))[..., None]
 
-    shade = (1.0 - 0.42 * grid_y)[..., None]
+    shade = (1.08 - 0.24 * grid_y)[..., None]
     split = (grid_x < 0.5).astype(np.float32)[..., None]
-    image = np.clip((left * split + right * (1.0 - split)) * shade, 0, 255).astype(np.uint8)
+    image = np.clip((left * split + right * (1.0 - split)) * shade + 12, 0, 255).astype(np.uint8)
     frame = Image.fromarray(image, mode="RGB").convert("RGBA")
 
     rng = np.random.default_rng(42)
-    grain = rng.normal(127, 12, (HEIGHT, WIDTH)).clip(0, 255).astype(np.uint8)
+    grain = rng.normal(127, 10, (HEIGHT, WIDTH)).clip(0, 255).astype(np.uint8)
     grain_img = Image.fromarray(grain, "L").convert("RGBA")
-    grain_img.putalpha(18)
+    grain_img.putalpha(13)
     frame.alpha_composite(grain_img)
 
-    dist = np.sqrt(((grid_x - 0.5) / 0.68) ** 2 + ((grid_y - 0.47) / 0.88) ** 2)
-    vignette_alpha = np.clip((dist - 0.34) / 0.66, 0, 1) * 118
+    dist = np.sqrt(((grid_x - 0.5) / 0.72) ** 2 + ((grid_y - 0.47) / 0.90) ** 2)
+    vignette_alpha = np.clip((dist - 0.38) / 0.70, 0, 1) * 74
     vignette = Image.fromarray(vignette_alpha.astype(np.uint8), "L")
     dark = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 255))
     dark.putalpha(vignette)
@@ -316,38 +324,35 @@ def _draw_static_layer(portraits: dict[str, Image.Image]) -> Image.Image:
     draw = ImageDraw.Draw(frame, "RGBA")
     center_glow = Image.new("RGBA", frame.size, (0, 0, 0, 0))
     cd = ImageDraw.Draw(center_glow, "RGBA")
-    cd.line((WIDTH // 2, 0, WIDTH // 2, HEIGHT), fill=(*THEME["center"], 125), width=2)
+    cd.line((WIDTH // 2, 0, WIDTH // 2, HEIGHT), fill=(*THEME["center"], 105), width=2)
     frame.alpha_composite(center_glow.filter(ImageFilter.GaussianBlur(radius=4)))
-    draw.line((WIDTH // 2, 0, WIDTH // 2, HEIGHT), fill=(*THEME["center"], 110), width=1)
+    draw.line((WIDTH // 2, 0, WIDTH // 2, HEIGHT), fill=(*THEME["center"], 94), width=1)
 
-    frame.alpha_composite(_glow_blob((360, 360), FEDERER["accent"], 72, 70), (88, PORTRAIT_TOP - 68))
-    frame.alpha_composite(_glow_blob((360, 360), NADAL["accent"], 76, 70), (632, PORTRAIT_TOP - 68))
-    frame.alpha_composite(_circle_portrait(portraits["federer"], FEDERER["accent"]), (132, PORTRAIT_TOP - 26))
-    frame.alpha_composite(_circle_portrait(portraits["nadal"], NADAL["accent"]), (708, PORTRAIT_TOP - 26))
-    draw.text((WIDTH // 2, 1886), "@clubversus", font=_load_sport_font(28, bold=True), fill=(255, 255, 255, 50), anchor="mm")
+    frame.alpha_composite(_glow_blob((360, 360), LEFT_PLAYER["accent"], 72, 70), (88, PORTRAIT_TOP - 68))
+    frame.alpha_composite(_glow_blob((360, 360), RIGHT_PLAYER["accent"], 76, 70), (632, PORTRAIT_TOP - 68))
+    frame.alpha_composite(_circle_portrait(portraits["left"], LEFT_PLAYER["accent"]), (132, PORTRAIT_TOP - 26))
+    frame.alpha_composite(_circle_portrait(portraits["right"], RIGHT_PLAYER["accent"]), (708, PORTRAIT_TOP - 26))
     return frame
 
 
-def _draw_header(frame: Image.Image, progress: float) -> None:
-    enter = _ease_out(progress / 0.025)
-    alpha = int(255 * enter)
-    scale = 0.965 + 0.035 * enter
+@lru_cache(maxsize=1)
+def _header_image() -> Image.Image:
     header = Image.new("RGBA", (WIDTH, 360), (0, 0, 0, 0))
     draw = ImageDraw.Draw(header, "RGBA")
 
     label_font = _load_sport_font(25, bold=True)
-    title_font = _fit_sport_font(draw, "FEDERER vs NADAL", 944, 94, 58, bold=True, condensed=True)
+    title_font = _fit_sport_font(draw, "FEDERER vs DJOKOVIC", 944, 94, 58, bold=True, condensed=True)
     sub_font = _load_sport_font(31, bold=False)
 
     pill_w, pill_h = 326, 42
     pill_x = WIDTH // 2 - pill_w // 2
     draw.rounded_rectangle((pill_x, 42, pill_x + pill_w, 42 + pill_h), radius=21, fill=(255, 255, 255, 22), outline=(255, 255, 255, 46), width=1)
-    draw.text((WIDTH // 2, 63), "LEGENDARY RIVALRY", font=label_font, fill=(*THEME["muted"], alpha), anchor="mm")
+    draw.text((WIDTH // 2, 63), "LEGENDARY RIVALRY", font=label_font, fill=(*THEME["muted"], 255), anchor="mm")
 
     _draw_glow_text(
         header,
         (WIDTH // 2, 164),
-        "FEDERER vs NADAL",
+        "FEDERER vs DJOKOVIC",
         title_font,
         THEME["paper"],
         stroke_width=2,
@@ -355,25 +360,56 @@ def _draw_header(frame: Image.Image, progress: float) -> None:
         glow_radius=9,
         glow_alpha=74,
     )
-    draw.text((WIDTH // 2, 254), "HEAD-TO-HEAD TIMELINE", font=sub_font, fill=(224, 233, 246, alpha), anchor="mm")
-    draw.line((274, 292, 806, 292), fill=(255, 255, 255, int(70 * enter)), width=1)
-    draw.line((338, 294, 742, 294), fill=(*THEME["center"], int(120 * enter)), width=2)
+    draw.text((WIDTH // 2, 254), "HEAD-TO-HEAD TIMELINE", font=sub_font, fill=(224, 233, 246, 255), anchor="mm")
+    draw.line((274, 292, 806, 292), fill=(255, 255, 255, 70), width=1)
+    draw.line((338, 294, 742, 294), fill=(*THEME["center"], 120), width=2)
+    return header
 
-    if scale != 1.0:
-        nw, nh = int(WIDTH * scale), int(360 * scale)
-        header = header.resize((nw, nh), Image.Resampling.LANCZOS)
-        x = (WIDTH - nw) // 2
-        y = int(8 - 12 * (1.0 - enter))
-    else:
-        x, y = 0, 8
-    if alpha < 255:
-        header.putalpha(ImageEnhance.Brightness(header.getchannel("A")).enhance(enter))
+
+def _draw_header(frame: Image.Image, progress: float) -> None:
+    enter = _ease_out(progress / 0.025)
+    header = _header_image()
+    if enter >= 0.999:
+        frame.alpha_composite(header, (0, 8))
+        return
+
+    scale = 0.965 + 0.035 * enter
+
+    nw, nh = int(WIDTH * scale), int(360 * scale)
+    header = header.resize((nw, nh), Image.Resampling.LANCZOS)
+    x = (WIDTH - nw) // 2
+    y = int(8 - 12 * (1.0 - enter))
+    header.putalpha(ImageEnhance.Brightness(header.getchannel("A")).enhance(enter))
     frame.alpha_composite(header, (x, y))
 
 
-def _short_score(scoreline: str) -> str:
+def _flip_set_score(part: str) -> str:
+    left, right = part.split("-", 1)
+    return f"{right}-{left}"
+
+
+def _scoreline_set_count(scoreline: str) -> int:
+    return len(scoreline.split())
+
+
+def _badge_width_for_scoreline(scoreline: str) -> int:
+    set_count = _scoreline_set_count(scoreline)
+    width_map = {
+        2: 186,
+        3: 246,
+        4: 318,
+        5: 410,
+    }
+    return width_map.get(set_count, min(430, max(BADGE_W, 132 + 58 * set_count)))
+
+
+def _federer_first_scoreline(scoreline: str, winner: str) -> str:
     parts = scoreline.split()
-    return " ".join(parts[:3]) if len(parts) > 3 else scoreline
+    if winner == "left":
+        ordered = parts
+    else:
+        ordered = [_flip_set_score(part) for part in parts]
+    return "  ".join(ordered)
 
 
 def _short_event(event: str) -> str:
@@ -391,6 +427,7 @@ def _short_event(event: str) -> str:
     return event
 
 
+@lru_cache(maxsize=None)
 def _surface_colors(event: str) -> tuple[tuple[int, int, int], tuple[int, int, int], tuple[int, int, int]]:
     event = event.upper()
     if any(surface_event in event for surface_event in ("ROLAND GARROS", "MONTE CARLO", "ROME", "HAMBURG", "MADRID")):
@@ -403,29 +440,36 @@ def _surface_colors(event: str) -> tuple[tuple[int, int, int], tuple[int, int, i
 
 
 @lru_cache(maxsize=None)
-def _score_badge(scoreline: str, accent: tuple[int, int, int], surface_top: tuple[int, int, int], surface_bottom: tuple[int, int, int]) -> Image.Image:
-    img = Image.new("RGBA", (BADGE_W, BADGE_H + 10), (0, 0, 0, 0))
+def _match_label_font(label: str, badge_width: int) -> ImageFont.ImageFont:
+    img = Image.new("RGBA", (1, 1), (0, 0, 0, 0))
+    return _fit_sport_font(ImageDraw.Draw(img), label, badge_width + 80, 25, 15, bold=True)
+
+
+@lru_cache(maxsize=None)
+def _score_badge(scoreline: str, winner: str, accent: tuple[int, int, int], surface_top: tuple[int, int, int], surface_bottom: tuple[int, int, int]) -> Image.Image:
+    badge_w = _badge_width_for_scoreline(scoreline)
+    img = Image.new("RGBA", (badge_w, BADGE_H + 10), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img, "RGBA")
     shadow = Image.new("RGBA", img.size, (0, 0, 0, 0))
-    ImageDraw.Draw(shadow, "RGBA").rounded_rectangle((5, 10, BADGE_W - 5, BADGE_H + 2), radius=18, fill=(0, 0, 0, 145))
+    ImageDraw.Draw(shadow, "RGBA").rounded_rectangle((5, 10, badge_w - 5, BADGE_H + 2), radius=18, fill=(0, 0, 0, 145))
     img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(radius=7)))
     glow = Image.new("RGBA", img.size, (0, 0, 0, 0))
-    ImageDraw.Draw(glow, "RGBA").rounded_rectangle((2, 4, BADGE_W - 2, BADGE_H + 2), radius=18, outline=(*accent, 118), width=4)
+    ImageDraw.Draw(glow, "RGBA").rounded_rectangle((2, 4, badge_w - 2, BADGE_H + 2), radius=18, outline=(*accent, 118), width=4)
     img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(radius=5)))
-    panel = _rounded_glass((BADGE_W, BADGE_H), 18, fill_alpha=176)
-    grad = _vertical_gradient((BADGE_W, BADGE_H), surface_top, surface_bottom)
+    panel = _rounded_glass((badge_w, BADGE_H), 18, fill_alpha=176)
+    grad = _vertical_gradient((badge_w, BADGE_H), surface_top, surface_bottom)
     grad.putalpha(228)
     panel.alpha_composite(grad)
     pd = ImageDraw.Draw(panel, "RGBA")
-    pd.rounded_rectangle((0, 0, BADGE_W - 1, BADGE_H - 1), radius=18, outline=(*accent, 238), width=2)
-    pd.rounded_rectangle((7, 7, BADGE_W - 8, BADGE_H - 8), radius=13, outline=(255, 255, 255, 42), width=1)
-    pd.rounded_rectangle((10, 7, BADGE_W - 10, 12), radius=3, fill=(*accent, 148))
+    pd.rounded_rectangle((0, 0, badge_w - 1, BADGE_H - 1), radius=18, outline=(*accent, 238), width=2)
+    pd.rounded_rectangle((7, 7, badge_w - 8, BADGE_H - 8), radius=13, outline=(255, 255, 255, 42), width=1)
+    pd.rounded_rectangle((10, 7, badge_w - 10, 12), radius=3, fill=(*accent, 148))
     img.alpha_composite(panel, (0, 0))
 
-    text = _short_score(scoreline)
-    font = _fit_sport_font(draw, text, BADGE_W - 24, 35, 22, bold=True, condensed=False)
-    draw.text((BADGE_W // 2 + 2, BADGE_H // 2 + 2), text, font=font, fill=(0, 0, 0, 150), anchor="mm")
-    draw.text((BADGE_W // 2, BADGE_H // 2), text, font=font, fill=(248, 251, 255, 255), anchor="mm")
+    text = _federer_first_scoreline(scoreline, winner)
+    font = _fit_sport_font(draw, text, badge_w - 28, 34, 18, bold=True, condensed=True)
+    draw.text((badge_w // 2 + 2, BADGE_H // 2 + 2), text, font=font, fill=(0, 0, 0, 150), anchor="mm")
+    draw.text((badge_w // 2, BADGE_H // 2), text, font=font, fill=(248, 251, 255, 255), anchor="mm")
     return img
 
 
@@ -436,20 +480,53 @@ def _time_offset(year: int, month: int = 1) -> float:
 @lru_cache(maxsize=1)
 def _match_layout() -> tuple[tuple[MatchEntry, int, int], ...]:
     slots: list[tuple[MatchEntry, int, int]] = []
-    lane_gap = (WIDTH - 2 * BADGE_MARGIN_X - BADGE_W) / (BADGE_LANES - 1)
-    lane_x = [round(BADGE_MARGIN_X + idx * lane_gap) for idx in range(BADGE_LANES)]
-    lane_order = (2, 1, 3, 0, 4)
-    last_slot_y = [-10_000.0 for _ in range(BADGE_LANES)]
-    min_gap = BADGE_H + 72
+    placed_rects: list[tuple[int, int, int, int]] = []
+    y_offsets = (28, -28, 84, -84, 140, -140, 196, -196)
     for match in MATCHES:
-        slot_y = _time_offset(match.year, match.month) * ROW_SPACING
-        lane = next(
-            (idx for idx in lane_order if slot_y - last_slot_y[idx] >= min_gap),
-            min(range(BADGE_LANES), key=lambda idx: last_slot_y[idx]),
-        )
-        x = lane_x[lane]
-        last_slot_y[lane] = slot_y
-        slots.append((match, x, 28))
+        base_y = int(round(_time_offset(match.year, match.month) * ROW_SPACING))
+        badge_w = _badge_width_for_scoreline(match.scoreline)
+        max_x = WIDTH - BADGE_MARGIN_X - badge_w
+        lane_count = max(2, min(BADGE_LANES, int((WIDTH - BADGE_MARGIN_X * 2) / max(1, badge_w * 0.46))))
+        x_candidates = [
+            round(BADGE_MARGIN_X + idx * (max_x - BADGE_MARGIN_X) / max(1, lane_count - 1))
+            for idx in range(lane_count)
+        ]
+        center_order = sorted(x_candidates, key=lambda item: (abs((item + badge_w / 2) - WIDTH / 2), item))
+
+        best: tuple[float, int, tuple[int, int, int, int], int] | None = None
+        for offset in y_offsets:
+            y0 = base_y + offset - 42
+            y1 = base_y + offset + BADGE_H + 16
+            for x in center_order:
+                rect = (x - BADGE_GAP_X, y0, x + badge_w + BADGE_GAP_X, y1)
+                overlap = sum(
+                    max(0, min(rect[2], other[2]) - max(rect[0], other[0]))
+                    * max(0, min(rect[3], other[3]) - max(rect[1], other[1]))
+                    for other in placed_rects
+                )
+                vertical_neighbors = [
+                    other
+                    for other in placed_rects
+                    if max(0, min(rect[3] + 170, other[3]) - max(rect[1] - 170, other[1]))
+                ]
+                left_load = sum(max(0, min(other[2], WIDTH // 2) - max(other[0], 0)) for other in vertical_neighbors)
+                right_load = sum(max(0, min(other[2], WIDTH) - max(other[0], WIDTH // 2)) for other in vertical_neighbors)
+                side_load = left_load if x + badge_w / 2 < WIDTH / 2 else right_load
+                preferred_center = WIDTH * (0.35 if match.winner == "left" else 0.65)
+                score = (
+                    overlap * 1000
+                    + abs(offset) * 4
+                    + abs((x + badge_w / 2) - preferred_center) * 0.95
+                    + abs((x + badge_w / 2) - WIDTH / 2) * 0.22
+                    + side_load * 0.42
+                )
+                if best is None or score < best[0]:
+                    best = (score, x, rect, offset)
+
+        assert best is not None
+        _score, x, rect, offset = best
+        placed_rects.append(rect)
+        slots.append((match, x, offset))
     return tuple(slots)
 
 
@@ -463,7 +540,7 @@ def _timeline_end_scroll() -> float:
 
 
 def _timeline_y(year: int, month: int, progress: float) -> float:
-    return TIMELINE_START_Y + _time_offset(year, month) * ROW_SPACING - _timeline_end_scroll() * _ease_out(progress)
+    return TIMELINE_START_Y + _time_offset(year, month) * ROW_SPACING - _timeline_end_scroll() * progress
 
 
 @lru_cache(maxsize=1)
@@ -512,7 +589,7 @@ def _timeline_layer() -> Image.Image:
 
 def _draw_timeline(frame: Image.Image, progress: float) -> None:
     layer = _timeline_layer()
-    scroll = _timeline_end_scroll() * _ease_out(progress)
+    scroll = _timeline_end_scroll() * progress
     paste_y = int(round(TIMELINE_START_Y - scroll))
     visible_top = max(SCORE_TOUCH_Y, paste_y)
     visible_bottom = min(HEIGHT, paste_y + layer.height)
@@ -531,9 +608,9 @@ def _draw_timeline(frame: Image.Image, progress: float) -> None:
         if fade <= 0 or by > HEIGHT + 190:
             continue
 
-        accent = FEDERER["accent"] if match.winner == "left" else NADAL["accent"]
+        accent = LEFT_PLAYER["accent"] if match.winner == "left" else RIGHT_PLAYER["accent"]
         surface_top, surface_bottom, surface_accent = _surface_colors(match.event)
-        badge = _score_badge(match.scoreline, accent, surface_top, surface_bottom)
+        badge = _score_badge(match.scoreline, match.winner, accent, surface_top, surface_bottom)
         spawn_y = HEIGHT - 110
         spawn = _ease_out(_clamp((spawn_y - by) / 92.0))
         scale = 0.94 + 0.06 * spawn
@@ -541,29 +618,30 @@ def _draw_timeline(frame: Image.Image, progress: float) -> None:
         if scale < 0.995:
             nw, nh = int(badge.width * scale), int(badge.height * scale)
             badge = badge.resize((nw, nh), Image.Resampling.LANCZOS)
-            x = x + (BADGE_W - nw) // 2
+        draw_x = int(x)
+        draw_x = max(BADGE_MARGIN_X, min(draw_x, WIDTH - badge.width - BADGE_MARGIN_X))
         if fade < 1:
             badge = badge.copy()
             badge.putalpha(ImageEnhance.Brightness(badge.getchannel("A")).enhance(fade))
         if flash > 0:
-            flash_layer = Image.new("RGBA", frame.size, (0, 0, 0, 0))
+            flash_layer = Image.new("RGBA", (badge.width + 36, badge.height + 34), (0, 0, 0, 0))
             fd = ImageDraw.Draw(flash_layer, "RGBA")
-            fd.rounded_rectangle((x - 9, by - 8, x + badge.width + 9, by + badge.height + 6), radius=24, outline=(*surface_accent, int(95 * flash)), width=4)
-            frame.alpha_composite(flash_layer.filter(ImageFilter.GaussianBlur(radius=8)))
+            fd.rounded_rectangle((9, 8, badge.width + 27, badge.height + 20), radius=24, outline=(*surface_accent, int(95 * flash)), width=4)
+            frame.alpha_composite(flash_layer.filter(ImageFilter.GaussianBlur(radius=8)), (draw_x - 18, by - 17))
 
         label = f"{match.month:02d}/{match.year} - {_short_event(match.event)}"
         label_alpha = fade * _clamp((HEIGHT - by - 4) / 70.0)
-        label_font = _fit_sport_font(draw, label, BADGE_W + 80, 25, 15, bold=True)
+        label_font = _match_label_font(label, badge.width)
         if label_alpha > 0:
             draw.text(
-                (x + badge.width // 2 + 2, by - 20),
+                (draw_x + badge.width // 2 + 2, by - 20),
                 label,
                 font=label_font,
                 fill=(0, 0, 0, int(150 * label_alpha)),
                 anchor="mm",
             )
             draw.text(
-                (x + badge.width // 2, by - 22),
+                (draw_x + badge.width // 2, by - 22),
                 label,
                 font=label_font,
                 fill=(235, 242, 255, int(230 * label_alpha)),
@@ -571,7 +649,7 @@ def _draw_timeline(frame: Image.Image, progress: float) -> None:
                 stroke_width=1,
                 stroke_fill=(0, 0, 0, int(125 * label_alpha)),
             )
-        frame.alpha_composite(badge, (x, by))
+        frame.alpha_composite(badge, (draw_x, by))
 
 
 def _scores_for_progress(progress: float) -> tuple[int, int]:
@@ -589,8 +667,7 @@ def _scores_for_progress(progress: float) -> tuple[int, int]:
 
 def _touch_progress(match: MatchEntry, offset: int) -> float:
     target = (TIMELINE_START_Y + _time_offset(match.year, match.month) * ROW_SPACING + offset - SCORE_TOUCH_Y) / _timeline_end_scroll()
-    target = _clamp(target)
-    return 1.0 - (1.0 - target) ** (1.0 / 3.0)
+    return _clamp(target)
 
 
 def _score_pulse(progress: float, winner: str) -> float:
@@ -604,44 +681,46 @@ def _score_pulse(progress: float, winner: str) -> float:
     return _ease_out(pulse)
 
 
-def _draw_score_card(
-    frame: Image.Image,
-    box: tuple[int, int, int, int],
+@lru_cache(maxsize=None)
+def _score_card_image(
+    width: int,
+    height: int,
     score: int,
     accent: tuple[int, int, int],
-    pulse: float,
-) -> None:
-    draw = ImageDraw.Draw(frame, "RGBA")
+    pulse_bucket: int,
+) -> Image.Image:
+    pulse = pulse_bucket / 10.0
     scale = 1.0 + 0.035 * pulse
-    cx = (box[0] + box[2]) / 2
-    cy = (box[1] + box[3]) / 2
-    w = (box[2] - box[0]) * scale
-    h = (box[3] - box[1]) * scale
-    scaled = (int(cx - w / 2), int(cy - h / 2), int(cx + w / 2), int(cy + h / 2))
+    w = int(width * scale)
+    h = int(height * scale)
+    pad = 34
+    img = Image.new("RGBA", (w + pad * 2, h + pad * 2), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img, "RGBA")
+    box = (pad, pad, pad + w, pad + h)
 
-    shadow = Image.new("RGBA", frame.size, (0, 0, 0, 0))
+    shadow = Image.new("RGBA", img.size, (0, 0, 0, 0))
     sd = ImageDraw.Draw(shadow, "RGBA")
-    sd.rounded_rectangle((scaled[0] + 12, scaled[1] + 16, scaled[2] + 12, scaled[3] + 16), radius=28, fill=(0, 0, 0, 150))
-    frame.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(radius=12)))
+    sd.rounded_rectangle((box[0] + 12, box[1] + 16, box[2] + 12, box[3] + 16), radius=28, fill=(0, 0, 0, 150))
+    img.alpha_composite(shadow.filter(ImageFilter.GaussianBlur(radius=12)))
 
-    glow = Image.new("RGBA", frame.size, (0, 0, 0, 0))
+    glow = Image.new("RGBA", img.size, (0, 0, 0, 0))
     gd = ImageDraw.Draw(glow, "RGBA")
-    gd.rounded_rectangle((scaled[0] - 2, scaled[1] - 2, scaled[2] + 2, scaled[3] + 2), radius=30, outline=(*accent, 80 + int(115 * pulse)), width=5)
-    frame.alpha_composite(glow.filter(ImageFilter.GaussianBlur(radius=8)))
+    gd.rounded_rectangle((box[0] - 2, box[1] - 2, box[2] + 2, box[3] + 2), radius=30, outline=(*accent, 80 + int(115 * pulse)), width=5)
+    img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(radius=8)))
 
-    panel = _vertical_gradient((scaled[2] - scaled[0], scaled[3] - scaled[1]), (42, 54, 78), (9, 15, 28))
+    panel = _vertical_gradient((w, h), (42, 54, 78), (9, 15, 28))
     mask = Image.new("L", panel.size, 0)
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, panel.width - 1, panel.height - 1), radius=28, fill=218)
     panel.putalpha(mask)
-    frame.alpha_composite(panel, (scaled[0], scaled[1]))
-    draw.rounded_rectangle(scaled, radius=28, outline=(255, 255, 255, 58), width=1)
-    draw.rounded_rectangle((scaled[0] + 3, scaled[1] + 3, scaled[2] - 3, scaled[3] - 3), radius=24, outline=(*accent, 214), width=2)
-    draw.rounded_rectangle((scaled[0] + 10, scaled[1] + 10, scaled[2] - 10, scaled[1] + 18), radius=4, fill=(*accent, 176))
+    img.alpha_composite(panel, (box[0], box[1]))
+    draw.rounded_rectangle(box, radius=28, outline=(255, 255, 255, 58), width=1)
+    draw.rounded_rectangle((box[0] + 3, box[1] + 3, box[2] - 3, box[3] - 3), radius=24, outline=(*accent, 214), width=2)
+    draw.rounded_rectangle((box[0] + 10, box[1] + 10, box[2] - 10, box[1] + 18), radius=4, fill=(*accent, 176))
 
     score_font = _fit_sport_font(draw, str(score), int(w - 46), 118, 62, bold=True, condensed=True)
     _draw_glow_text(
-        frame,
-        (int(cx), int(cy + 12)),
+        img,
+        (img.width // 2, img.height // 2 + 12),
         str(score),
         score_font,
         (248, 251, 255),
@@ -650,16 +729,31 @@ def _draw_score_card(
         glow_radius=8,
         glow_alpha=75 + int(70 * pulse),
     )
+    return img
 
 
-def _draw_scoreboard(frame: Image.Image, left_score: int, right_score: int, progress: float) -> None:
-    draw = ImageDraw.Draw(frame, "RGBA")
-    left_box = (148, SCOREBOARD_TOP - 2, 394, SCOREBOARD_BOTTOM + 10)
-    right_box = (686, SCOREBOARD_TOP - 2, 932, SCOREBOARD_BOTTOM + 10)
-    line = Image.new("RGBA", frame.size, (0, 0, 0, 0))
+def _draw_score_card(
+    frame: Image.Image,
+    box: tuple[int, int, int, int],
+    score: int,
+    accent: tuple[int, int, int],
+    pulse: float,
+) -> None:
+    pulse_bucket = int(round(_clamp(pulse) * 10))
+    card = _score_card_image(box[2] - box[0], box[3] - box[1], score, accent, pulse_bucket)
+    cx = (box[0] + box[2]) // 2
+    cy = (box[1] + box[3]) // 2
+    frame.alpha_composite(card, (cx - card.width // 2, cy - card.height // 2))
+
+
+@lru_cache(maxsize=1)
+def _scoreboard_base() -> Image.Image:
+    img = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img, "RGBA")
+    line = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
     ld = ImageDraw.Draw(line, "RGBA")
     ld.line((0, SCOREBOARD_LINE_Y, WIDTH, SCOREBOARD_LINE_Y), fill=(*THEME["center"], 116), width=2)
-    frame.alpha_composite(line.filter(ImageFilter.GaussianBlur(radius=3)))
+    img.alpha_composite(line.filter(ImageFilter.GaussianBlur(radius=3)))
     draw.line((0, SCOREBOARD_LINE_Y, WIDTH, SCOREBOARD_LINE_Y), fill=(236, 246, 255, 130), width=1)
 
     small_font = _load_sport_font(28, bold=True)
@@ -667,17 +761,24 @@ def _draw_scoreboard(frame: Image.Image, left_score: int, right_score: int, prog
     draw.text((809, SCOREBOARD_TOP - 31), "VICTOIRES", font=small_font, fill=(226, 236, 250, 228), anchor="mm")
     draw.rounded_rectangle((497, SCOREBOARD_TOP - 45, 583, SCOREBOARD_TOP - 10), radius=17, fill=(*THEME["panel_hi"], 172), outline=(255, 255, 255, 60), width=1)
     draw.text((WIDTH // 2, SCOREBOARD_TOP - 27), "H2H", font=_load_sport_font(22, bold=True), fill=(242, 248, 255, 235), anchor="mm")
+    return img
 
-    _draw_score_card(frame, left_box, left_score, FEDERER["accent"], _score_pulse(progress, "left"))
-    _draw_score_card(frame, right_box, right_score, NADAL["accent"], _score_pulse(progress, "right"))
+
+def _draw_scoreboard(frame: Image.Image, left_score: int, right_score: int, progress: float) -> None:
+    left_box = (148, SCOREBOARD_TOP - 2, 394, SCOREBOARD_BOTTOM + 10)
+    right_box = (686, SCOREBOARD_TOP - 2, 932, SCOREBOARD_BOTTOM + 10)
+    frame.alpha_composite(_scoreboard_base())
+
+    _draw_score_card(frame, left_box, left_score, LEFT_PLAYER["accent"], _score_pulse(progress, "left"))
+    _draw_score_card(frame, right_box, right_score, RIGHT_PLAYER["accent"], _score_pulse(progress, "right"))
 
 
 def render_video(output_path: Path, audio_path: Path, duration: float, fps: int) -> Path:
-    if duration > 60:
-        raise ValueError("La video doit durer 60 secondes maximum.")
+    if duration > 120:
+        raise ValueError("La video doit durer 120 secondes maximum.")
     portraits = {
-        "federer": _load_portrait(PHOTOS_DIR / FEDERER["photo"], "RF"),
-        "nadal": _load_portrait(PHOTOS_DIR / NADAL["photo"], "RN"),
+        "left": _load_portrait(PHOTOS_DIR / LEFT_PLAYER["photo"], "RF"),
+        "right": _load_portrait(PHOTOS_DIR / RIGHT_PLAYER["photo"], "ND"),
     }
     static_layer = _draw_static_layer(portraits)
 
@@ -730,14 +831,14 @@ def render_video(output_path: Path, audio_path: Path, duration: float, fps: int)
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate a Federer vs Nadal H2H score timeline Shorts video.")
+    parser = argparse.ArgumentParser(description="Generate a Federer vs Djokovic H2H score timeline Shorts video.")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--audio", type=Path, default=DEFAULT_AUDIO)
     parser.add_argument("--duration", type=float, default=TOTAL_DURATION)
     parser.add_argument("--fps", type=int, default=FPS)
     args = parser.parse_args()
     render_video(args.output, args.audio, args.duration, args.fps)
-    print(f"[video_generator] Federer vs Nadal H2H score timeline generated -> {args.output}")
+    print(f"[video_generator] Federer vs Djokovic H2H score timeline generated -> {args.output}")
 
 
 if __name__ == "__main__":
