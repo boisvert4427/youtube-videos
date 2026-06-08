@@ -5,18 +5,23 @@ import math
 import re
 import subprocess
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 import numpy as np
-from moviepy import CompositeVideoClip, ImageClip, VideoFileClip, concatenate_videoclips
+from moviepy import CompositeAudioClip, CompositeVideoClip, ImageClip, VideoFileClip, concatenate_videoclips
+from moviepy.audio.fx import AudioFadeIn, AudioFadeOut
+from moviepy.video.fx import FadeIn, FadeOut
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageOps
 
 from video_generator.tennis.generate_atp_shorts_timeline_moviepy import (
+    DEFAULT_AUDIO,
     _fit_font,
     _load_font,
     _resolve_player_image,
     _truncate_to_width,
+    build_audio_track,
 )
 from video_generator.tennis.generate_roland_garros_titles_cards_shorts_moviepy import (
     DEFAULT_INPUT,
@@ -45,7 +50,7 @@ SCENE_DURATION = 2.5
 
 CARD_COUNT = 5
 CARD_W = WIDTH
-CARD_H = HEIGHT // 2
+CARD_H = int(round(HEIGHT / 3))
 CARD_X = 0
 CARD_Y = 0
 
@@ -54,6 +59,17 @@ PANEL_H = HEIGHT - CARD_H
 PANEL_X = 0
 PANEL_Y = CARD_H
 PANEL_INNER_PAD = 0
+TRANSITION_DURATION = 0.6
+DEFAULT_ORIGINAL_VOLUME = 0.5
+DEFAULT_MUSIC_VOLUME = 0.5
+
+
+@dataclass(frozen=True)
+class ClipSegment:
+    player_name: str
+    url: str
+    start: str
+    end: str
 
 
 def _slugify(value: str) -> str:
@@ -95,6 +111,19 @@ def _format_seconds(value: float) -> str:
     hours, remainder = divmod(total_seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
     return f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
+
+def _parse_clip_segment(value: str) -> ClipSegment:
+    parts = [part.strip() for part in value.split("|")]
+    if len(parts) != 4:
+        raise ValueError(
+            "Invalid --segment value. Expected format PLAYER|URL|START|END, "
+            f"got: {value!r}"
+        )
+    player_name, url, start, end = parts
+    if not player_name or not url or not start or not end:
+        raise ValueError(f"Invalid --segment value: {value!r}")
+    return ClipSegment(player_name=player_name, url=url, start=start, end=end)
 
 
 def _make_header_bar(logo: Image.Image | None) -> Image.Image:
@@ -284,8 +313,7 @@ def _render_wide_card(entry: Any, photos_dir: Path, flags_dir: Path) -> Image.Im
     rank_box = (42, 42, 156, 156)
     draw.rounded_rectangle(rank_box, radius=28, fill=(12, 18, 25, 224), outline=(*accent_rgb, 120), width=2)
     rank_font = _fit_font(draw, str(entry.rank), rank_box[2] - rank_box[0] - 18, 60, 28, bold=True)
-    draw.text(((rank_box[0] + rank_box[2]) // 2, rank_box[1] + 32), str(entry.rank), font=rank_font, fill="#f8fbff", anchor="ma")
-    draw.text((rank_box[0] + 16, rank_box[3] - 20), "RANG", font=_load_font(14, bold=True), fill="#c9dfef", anchor="ls")
+    draw.text(((rank_box[0] + rank_box[2]) // 2, (rank_box[1] + rank_box[3]) // 2), str(entry.rank), font=rank_font, fill="#f8fbff", anchor="mm")
 
     right_x = photo_rect[2] + 28
     right_w = CARD_W - right_x - 24
@@ -302,7 +330,10 @@ def _render_wide_card(entry: Any, photos_dir: Path, flags_dir: Path) -> Image.Im
     if flag_path is not None:
         try:
             flag = Image.open(flag_path).convert("RGBA").resize((72, 48), Image.Resampling.LANCZOS)
-            frame.alpha_composite(flag, (CARD_W - 96, 42))
+            flag_x = right_x + (right_w - flag.width) // 2
+            flag_y = name_bottom + 12
+            frame.alpha_composite(flag, (flag_x, flag_y))
+            name_bottom = flag_y + flag.height
         except Exception:
             pass
 
@@ -395,6 +426,58 @@ def _render_slide_base(entry: Any, photos_dir: Path, flags_dir: Path, active: bo
     return base
 
 
+def _build_scene(
+    entry: Any,
+    photos_dir: Path,
+    flags_dir: Path,
+    match_clip: VideoFileClip | None,
+    duration: float,
+    active: bool,
+) -> CompositeVideoClip | ImageClip:
+    base = _render_slide_base(entry, photos_dir, flags_dir, active)
+    base_clip = ImageClip(np.array(base.convert("RGB"))).with_duration(duration)
+
+    if match_clip is None:
+        return base_clip
+
+    active_x = PANEL_X + PANEL_INNER_PAD
+    active_y = PANEL_Y + PANEL_INNER_PAD
+    active_w = PANEL_W - PANEL_INNER_PAD * 2
+    active_h = PANEL_H - PANEL_INNER_PAD * 2
+    active_clip = _fit_clip_to_panel(match_clip, active_w, active_h).with_position((active_x, active_y))
+    scene = CompositeVideoClip([base_clip, active_clip], size=(WIDTH, HEIGHT)).with_duration(duration)
+    if active_clip.audio is not None:
+        scene = scene.with_audio(active_clip.audio)
+    return scene
+
+
+def _mix_output_audio(
+    clip: CompositeVideoClip,
+    music_path: Path,
+    original_volume: float,
+    music_volume: float,
+) -> tuple[CompositeVideoClip, CompositeAudioClip | None, list[Any]]:
+    audio_sources = []
+    keep_alive = []
+
+    original_volume = max(0.0, original_volume)
+    music_volume = max(0.0, music_volume)
+
+    if clip.audio is not None and original_volume > 0:
+        audio_sources.append(clip.audio.with_volume_scaled(original_volume))
+
+    if music_path.exists() and music_volume > 0:
+        music_clip, music_keep_alive = build_audio_track(music_path, clip.duration)
+        audio_sources.append(music_clip.with_volume_scaled(music_volume))
+        keep_alive.extend(music_keep_alive)
+
+    if not audio_sources:
+        return clip, None, keep_alive
+
+    mixed_audio = CompositeAudioClip(audio_sources).with_duration(clip.duration)
+    return clip.with_audio(mixed_audio), mixed_audio, keep_alive
+
+
 def _find_focus_entry(entries: list, focus_player: str) -> tuple[int, Any]:
     target = focus_player.lower().strip()
     for index, entry in enumerate(entries):
@@ -418,16 +501,114 @@ def render_video(
     fps: int,
     top_n: int,
     focus_player: str,
+    music_path: Path,
+    original_volume: float,
+    music_volume: float,
+    transition_duration: float,
+    segments: list[ClipSegment] | None = None,
 ) -> Path:
     entries = _prepare_entries(input_csv, top_n)
     if len(entries) < top_n:
         raise RuntimeError(f"Expected at least {top_n} Roland-Garros entries.")
 
-    _, focus_entry = _find_focus_entry(entries, focus_player)
-
     output_path.parent.mkdir(parents=True, exist_ok=True)
     photos_dir.mkdir(parents=True, exist_ok=True)
     flags_dir.mkdir(parents=True, exist_ok=True)
+
+    if segments:
+        ordered_segments: list[tuple[int, ClipSegment, Any]] = []
+        for segment in segments:
+            _, entry = _find_focus_entry(entries, segment.player_name)
+            ordered_segments.append((entry.rank, segment, entry))
+        ordered_segments.sort(key=lambda item: item[0], reverse=True)
+
+        scenes: list[CompositeVideoClip | ImageClip] = []
+        cleanup_clips: list[Any] = []
+        durations: list[float] = []
+        mixed_audio: CompositeAudioClip | None = None
+        music_keep_alive: list[Any] = []
+        try:
+            for _, segment, entry in ordered_segments:
+                clip_cache_dir = cache_dir / _slugify(entry.player_name)
+                clip_path = _download_youtube_section(segment.url, segment.start, segment.end, clip_cache_dir)
+                raw_clip = VideoFileClip(str(clip_path))
+                cleanup_clips.append(raw_clip)
+                # In playlist mode, keep the full extracted clip length so the chain
+                # naturally follows the real video durations instead of an arbitrary cap.
+                usable_duration = raw_clip.duration
+                if usable_duration <= 0:
+                    raise RuntimeError(f"Downloaded clip has no usable duration for {entry.player_name}.")
+                match_clip = raw_clip.subclipped(0, usable_duration)
+                cleanup_clips.append(match_clip)
+                durations.append(usable_duration)
+                scenes.append(_build_scene(entry, photos_dir, flags_dir, match_clip, usable_duration, True))
+
+            if not scenes:
+                raise RuntimeError("No clip segments were provided.")
+
+            effective_transition = 0.0
+            if len(scenes) > 1:
+                effective_transition = min(max(0.15, transition_duration), max(0.15, min(durations) / 4.0))
+
+            for index, scene in enumerate(scenes):
+                effects = []
+                audio_effects = []
+                if effective_transition > 0:
+                    if index > 0:
+                        effects.append(FadeIn(effective_transition))
+                        audio_effects.append(AudioFadeIn(effective_transition))
+                    if index < len(scenes) - 1:
+                        effects.append(FadeOut(effective_transition))
+                        audio_effects.append(AudioFadeOut(effective_transition))
+                if effects:
+                    scene = scene.with_effects(effects)
+                if scene.audio is not None and audio_effects:
+                    scene = scene.with_audio(scene.audio.with_effects(audio_effects))
+                scenes[index] = scene
+
+            final_clip = concatenate_videoclips(
+                scenes,
+                method="compose",
+                padding=-effective_transition if effective_transition > 0 else 0,
+            )
+            final_clip, mixed_audio, music_keep_alive = _mix_output_audio(
+                final_clip,
+                music_path,
+                original_volume,
+                music_volume,
+            )
+            audio_codec = "aac" if final_clip.audio is not None else None
+            final_clip.write_videofile(
+                str(output_path),
+                fps=fps,
+                codec="libx264",
+                audio_codec=audio_codec,
+            )
+            final_clip.close()
+        finally:
+            for clip in scenes:
+                try:
+                    clip.close()
+                except Exception:
+                    pass
+            if mixed_audio is not None:
+                try:
+                    mixed_audio.close()
+                except Exception:
+                    pass
+            for clip in music_keep_alive:
+                try:
+                    clip.close()
+                except Exception:
+                    pass
+            for clip in cleanup_clips:
+                try:
+                    clip.close()
+                except Exception:
+                    pass
+        return output_path
+
+    _, focus_entry = _find_focus_entry(entries, focus_player)
 
     clip_path = _download_youtube_section(url, start, end, cache_dir)
     match_clip = VideoFileClip(str(clip_path))
@@ -438,26 +619,26 @@ def render_video(
 
     slides: list[CompositeVideoClip | ImageClip] = []
     focus_slide: CompositeVideoClip | None = None
+    mixed_audio: CompositeAudioClip | None = None
+    music_keep_alive: list[Any] = []
     try:
         for entry in reversed(entries):
             active = entry == focus_entry
             slide_duration = usable_duration if active else scene_duration
-            base = _render_slide_base(entry, photos_dir, flags_dir, active)
-            base_clip = ImageClip(np.array(base.convert("RGB"))).with_duration(slide_duration)
+            base = _build_scene(entry, photos_dir, flags_dir, match_clip if active else None, slide_duration, active)
             if active:
-                active_x = PANEL_X + PANEL_INNER_PAD
-                active_y = PANEL_Y + PANEL_INNER_PAD
-                active_w = PANEL_W - PANEL_INNER_PAD * 2
-                active_h = PANEL_H - PANEL_INNER_PAD * 2
-                active_clip = _fit_clip_to_panel(match_clip, active_w, active_h).with_position((active_x, active_y))
-                focus_slide = CompositeVideoClip([base_clip, active_clip], size=(WIDTH, HEIGHT)).with_duration(slide_duration)
-                if active_clip.audio is not None:
-                    focus_slide = focus_slide.with_audio(active_clip.audio)
-                slides.append(focus_slide)
+                focus_slide = base if isinstance(base, CompositeVideoClip) else None
+                slides.append(base)
             else:
-                slides.append(base_clip)
+                slides.append(base)
 
         final_clip = concatenate_videoclips(slides, method="compose")
+        final_clip, mixed_audio, music_keep_alive = _mix_output_audio(
+            final_clip,
+            music_path,
+            original_volume,
+            music_volume,
+        )
         audio_codec = "aac" if final_clip.audio is not None else None
         final_clip.write_videofile(
             str(output_path),
@@ -477,12 +658,22 @@ def render_video(
                 focus_slide.close()
         except Exception:
             pass
+        if mixed_audio is not None:
+            try:
+                mixed_audio.close()
+            except Exception:
+                pass
+        for clip in music_keep_alive:
+            try:
+                clip.close()
+            except Exception:
+                pass
         match_clip.close()
     return output_path
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Generate a Roland-Garros 50/50 split preview video.")
+    parser = argparse.ArgumentParser(description="Generate a Roland-Garros 1/3 card + 2/3 video preview.")
     parser.add_argument("--input", type=Path, default=DEFAULT_INPUT)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     parser.add_argument("--photos-dir", type=Path, default=DEFAULT_PHOTOS_DIR)
@@ -496,8 +687,24 @@ def main() -> None:
     parser.add_argument("--fps", type=int, default=FPS)
     parser.add_argument("--top-n", type=int, default=CARD_COUNT)
     parser.add_argument("--focus-player", type=str, default=DEFAULT_FOCUS_PLAYER)
+    parser.add_argument("--music", type=Path, default=DEFAULT_AUDIO)
+    parser.add_argument("--original-volume", type=float, default=DEFAULT_ORIGINAL_VOLUME)
+    parser.add_argument("--music-volume", type=float, default=DEFAULT_MUSIC_VOLUME)
+    parser.add_argument(
+        "--segment",
+        action="append",
+        default=[],
+        help="Playlist segment as PLAYER|URL|START|END. Can be repeated to chain several clips.",
+    )
+    parser.add_argument(
+        "--transition-duration",
+        type=float,
+        default=TRANSITION_DURATION,
+        help="Crossfade duration in seconds between chained segments.",
+    )
     args = parser.parse_args()
 
+    segments = [_parse_clip_segment(value) for value in args.segment]
     render_video(
         input_csv=args.input,
         output_path=args.output,
@@ -512,8 +719,16 @@ def main() -> None:
         fps=args.fps,
         top_n=args.top_n,
         focus_player=args.focus_player,
+        music_path=args.music,
+        original_volume=args.original_volume,
+        music_volume=args.music_volume,
+        transition_duration=args.transition_duration,
+        segments=segments or None,
     )
-    print(f"[video_generator] Roland-Garros 50/50 split preview generated -> {args.output}")
+    if segments:
+        print(f"[video_generator] Roland-Garros chained preview generated -> {args.output}")
+    else:
+        print(f"[video_generator] Roland-Garros 1/3 card + 2/3 video preview generated -> {args.output}")
 
 
 if __name__ == "__main__":
