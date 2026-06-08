@@ -37,6 +37,8 @@ du template NBA bracket 2025.
 - Supprimer les fichiers de preview creats pour le debug avant de terminer.
 - Pour les gros changements visuels, garder une hierarchie claire: titre, fond, lignes, logos, scores.
 - Le format de sortie est souvent vertical 1080x1920 pour les shorts.
+- Pour les timelines historiques, privilegier une legende integree a la frise et garder les textes contenus dans leur carte.
+- Pour le module history, la sortie canonique est `history/data/processed/france_kings_timeline_481_1830_300s_60fps_audio.mp4`.
 
 ## NBA Playoff Bracket 2025
 
@@ -82,6 +84,27 @@ du template NBA bracket 2025.
 - Format vertical `1080x1920`
 - Contenu: Federer 20, Nadal 22, Djokovic 24 avec portraits, barres animees et recap par age
 - Audio de fond par defaut: `data/raw/audio/audio.mp3`
+
+## ATP Prize Money Leaders Landscape Race
+
+- Builder CSV: `scraper/tennis/build_atp_prize_money_leaders_csv.py`
+- Script canonique: `video_generator/tennis/generate_atp_prize_money_leaders_race_moviepy.py`
+- Wrapper: `video_generator/generate_atp_prize_money_leaders_race_moviepy.py`
+- CSV par defaut: `data/processed/tennis/atp_prize_money_leaders_current.csv`
+- Sortie par defaut: `data/processed/tennis/atp_prize_money_leaders_current.mp4`
+- Format paysage `1920x1080`, duree par defaut `40s`, `60 fps`
+- Source officielle: `https://www.protennislive.com/posting/ramr/career_prize.pdf`
+- Assets locaux attendus:
+  - `data/raw/player_photos/`
+  - `data/raw/flags/`
+  - `data/raw/audio/audio.mp3`
+
+### Objectif Visuel
+
+- Coller au maximum au montage de reference: fond ciel bleu, skyline sombre, colonnes 3D beige, portraits circulaires, drapeaux et montants rouge fonce.
+- Conserver une lecture `portrait -> nom -> montant` dans chaque colonne.
+- Garder un scroll horizontal lent avec des proportions compactes.
+- Le CSV doit rester alimente depuis le PDF officiel ATP et le schema doit suivre si la source change.
 
 ## Federer vs Nadal H2H Score Timeline Shorts
 
@@ -149,7 +172,7 @@ Caractere du template:
 - Format vertical `1080x1920`, preview cible sur un extrait YouTube telecharge avec `yt-dlp`
 - Par defaut: `https://www.youtube.com/watch?v=Fkv_NJLsvAU`, segment `9:08 -> 9:25`, focus `Nadal`
 - Montage sequence `5 -> 1`, avec un ecran par rang
-- Layout 50/50: carte plein largeur en haut, video plein largeur en bas
+- Layout 1/3 carte en haut, 2/3 video en bas, sur toute la largeur
 - Le clip de match n'est branche que sur Nadal; les autres ecrans gardent le bas noir
 
 ### Points Sensibles

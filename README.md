@@ -37,6 +37,8 @@ Fichiers principaux:
 - Portraits: `history/data/raw/portraits/`
 - Preview image: `history/data/processed/france_kings_timeline_preview.png`
 - Preview video court: `history/data/processed/france_kings_timeline_preview_10s_15fps.mp4`
+- Video finale canonique: `history/data/processed/france_kings_timeline_481_1830_300s_60fps_audio.mp4`
+- La video de sortie ajoute une legende integree a la frise et garde les textes contenus dans la carte.
 
 Commandes:
 
@@ -108,7 +110,7 @@ Commandes:
    - Preview Nadal: `python video_generator/generate_roland_garros_titles_cards_matchpoint_preview_moviepy.py --url "https://www.youtube.com/watch?v=Fkv_NJLsvAU" --start 9:08 --end 9:25 --focus-player Nadal`
    - Sortie par defaut: `data/processed/tennis/roland_garros_titles_cards_matchpoint_preview.mp4`
    - Montage sequence 5 -> 1, avec un ecran par rang.
-   - Layout 50/50: carte plein largeur en haut, video plein largeur en bas.
+   - Layout 1/3 carte en haut, 2/3 video en bas, sur toute la largeur.
    - La video de match est active uniquement sur Nadal; les autres ecrans gardent le bas noir.
 
 ## Snapshots et frames YouTube
@@ -242,6 +244,36 @@ Regles fixes du template Shorts:
 - Freeze fin: `4s`
 - Audio source: `data/raw/audio/audio.mp3`
 - Fade out audio final: `6s`
+
+## Nouveau template: ATP Prize Money Leaders Race
+
+Fichiers principaux:
+
+- Builder CSV: `python scraper/tennis/build_atp_prize_money_leaders_csv.py`
+- Schema CSV: `schemas/tennis/atp_prize_money_leaders_v1.csv.md`
+- CSV par defaut: `data/processed/tennis/atp_prize_money_leaders_current.csv`
+- Video finale: `python video_generator/generate_atp_prize_money_leaders_race_moviepy.py`
+- Script canonique: `video_generator/tennis/generate_atp_prize_money_leaders_race_moviepy.py`
+- Source officielle: `https://www.protennislive.com/posting/ramr/career_prize.pdf`
+
+Assets locaux:
+
+- Portraits joueurs: `data/raw/player_photos/`
+- Drapeaux: `data/raw/flags/`
+- Audio de fond: `data/raw/audio/audio.mp3`
+
+Style:
+
+- Format paysage `1920x1080`, duree par defaut `40s`, `60 fps`
+- Classement ATP des gains en carriere, avec un scroll horizontal lent
+- Fond ciel bleu, skyline sombre, colonnes 3D beige, portraits circulaires, drapeaux, et valeurs rouge fonce
+- Le montage vise a coller au plus pres au style de la video de reference
+
+Points sensibles:
+
+- Garder la hierarchie visuelle `portrait / nom / montant` sur chaque colonne
+- Conserver des proportions compactes pour rester proche du rendu original
+- Ne pas remplacer le PDF ATP officiel par une source non verifiee sans mettre a jour le builder
 
 ## Nouveau template: Roland-Garros cards
 
