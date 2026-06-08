@@ -16,7 +16,7 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 INPUT_CSV = PROJECT_ROOT / "data" / "raw" / "france_kings_reigns.csv"
 PORTRAITS_DIR = PROJECT_ROOT / "data" / "raw" / "portraits"
-OUTPUT_MP4 = PROJECT_ROOT / "data" / "processed" / "france_kings_timeline_481_1830_300s_60fps_audio.mp4"
+OUTPUT_MP4 = PROJECT_ROOT / "data" / "processed" / "france_kings_timeline_481_1870_300s_60fps_audio.mp4"
 DEFAULT_AUDIO = PROJECT_ROOT / "data" / "raw" / "audio" / "audio.mp3"
 
 WIDTH = 1920
@@ -24,8 +24,8 @@ HEIGHT = 1080
 FPS = 60
 DURATION = 300.0
 DISPLAY_START_YEAR = 400
-DISPLAY_END_YEAR = 1830
-EPISODE_LABEL = "FRANCE MÉDIÉVALE"
+DISPLAY_END_YEAR = 1870
+EPISODE_LABEL = "FRANCE ROYALE ET IMPÉRIALE"
 FINAL_AUDIO_FADE_OUT = 8.0
 LOOP_CROSSFADE = 5.0
 
@@ -38,6 +38,10 @@ CAPITAL_BY_DYNASTY = {
     "Valois": "Paris",
     "Bourbons": "Versailles → Paris",
     "Révolution et Empire": "Paris",
+    "Empire": "Paris",
+    "Orleans": "Paris",
+    "Deuxième République": "Paris",
+    "Second Empire": "Paris",
 }
 
 TERRITORY_BY_DYNASTY = {
@@ -48,11 +52,21 @@ TERRITORY_BY_DYNASTY = {
     "Capetiens": "Royaume de France\nCentralisation",
     "Valois": "Royaume de France\nGuerre de Cent Ans",
     "Bourbons": "Royaume de France\nMonarchie absolue",
-    "Révolution et Empire": "France révolutionnaire\nEmpire napoléonien",
+    "Révolution et Empire": "France révolutionnaire\nRépublique",
+    "Empire": "Premier Empire\nExpansion européenne",
+    "Orleans": "Royaume de France\nMonarchie de Juillet",
+    "Deuxième République": "République française\nSuffrage universel masculin",
+    "Second Empire": "Empire français\nModernisation du pays",
 }
 
 FEATURE_OVERRIDES = {
     "Clovis I": ("Unification des Francs", "Conversion au christianisme"),
+    "Napoléon Ier": ("Premier Empire", "Empereur des Français"),
+    "Napoléon III": ("Second Empire", "Modernisation de la France"),
+}
+
+PORTRAIT_CROPS = {
+    "Napoléon III": (0.18, 0.0, 0.82, 0.64),
 }
 
 
@@ -177,14 +191,25 @@ def build_segments(rows: list[dict[str, str]]) -> list[dict[str, str | int]]:
             },
             {
                 "start_year": 1793,
-                "end_year": 1813,
+                "end_year": 1803,
                 "display_name": "Sans roi",
                 "dynasty": "Révolution et Empire",
                 "house_color": "#6c757d",
                 "notes": "Monarchie interrompue",
                 "fait_1": "La monarchie est abolie après la Révolution française.",
                 "fait_2": "La Première République puis le Consulat transforment le régime.",
-                "fait_3": "Napoléon Ier fonde ensuite l'Empire avant la Restauration bourbonienne.",
+                "fait_3": "Le Consulat prépare l'avènement du Premier Empire.",
+            },
+            {
+                "start_year": 1848,
+                "end_year": 1851,
+                "display_name": "Deuxième République",
+                "dynasty": "Deuxième République",
+                "house_color": "#6c757d",
+                "notes": "Régime républicain",
+                "fait_1": "La révolution de 1848 renverse la monarchie de Juillet.",
+                "fait_2": "Le suffrage universel masculin est instauré.",
+                "fait_3": "Louis-Napoléon Bonaparte devient président de la République.",
             },
         ]
     )
@@ -204,6 +229,17 @@ def load_portrait(name: str) -> Image.Image | None:
     if not path.exists():
         return None
     image = Image.open(path).convert("RGBA")
+    crop = PORTRAIT_CROPS.get(name)
+    if crop:
+        width, height = image.size
+        image = image.crop(
+            (
+                int(width * crop[0]),
+                int(height * crop[1]),
+                int(width * crop[2]),
+                int(height * crop[3]),
+            )
+        )
     return ImageOps.fit(image, (360, 430), method=Image.Resampling.LANCZOS, centering=(0.5, 0.34))
 
 
@@ -315,7 +351,7 @@ def compact_phrase(text: str, max_words: int = 5, max_chars: int = 34) -> str:
     cleaned = re.sub(r"\s+", " ", text).strip()
     if not cleaned:
         return ""
-    cleaned = cleaned.replace("«", "").replace("»", "").replace('"', "")
+    cleaned = re.sub(r"[«»\"]", "", cleaned)
     words = cleaned.split()
     if len(words) > max_words:
         cleaned = " ".join(words[:max_words])
@@ -326,36 +362,138 @@ def compact_phrase(text: str, max_words: int = 5, max_chars: int = 34) -> str:
     return cleaned
 
 
-def essential_summary_phrase(text: str, max_words: int = 12, max_chars: int = 72) -> str:
+SUMMARY_REWRITES: tuple[tuple[re.Pattern[str], str], ...] = (
+    (re.compile(r"unification des francs", re.IGNORECASE), "Unification des Francs"),
+    (re.compile(r"roi de tous les francs", re.IGNORECASE), "Roi de tous les Francs"),
+    (re.compile(r"roi des francs saliens", re.IGNORECASE), "Roi des Francs saliens"),
+    (re.compile(r"unifier une grande partie des (?:royaumes?\s+)?francs", re.IGNORECASE), "Unification des Francs"),
+    (re.compile(r"conversion au christianisme", re.IGNORECASE), "Conversion au christianisme"),
+    (re.compile(r"rattachement.*principaut", re.IGNORECASE), "Rattachement des principautés au domaine royal"),
+    (re.compile(r"renforcement de l['’]autorité royale", re.IGNORECASE), "Autorité royale renforcée"),
+    (re.compile(r"guerre de cent ans", re.IGNORECASE), "Fin de la guerre de Cent Ans"),
+    (re.compile(r"empire carolingien", re.IGNORECASE), "Empire carolingien menacé"),
+    (re.compile(r"maires du palais", re.IGNORECASE), "Pouvoir des maires du palais"),
+    (re.compile(r"monarchie est abolie|monarchie abolie", re.IGNORECASE), "Monarchie abolie"),
+    (re.compile(r"premi[èe]re r[ée]publique", re.IGNORECASE), "Première République"),
+    (re.compile(r"consulat", re.IGNORECASE), "Consulat"),
+    (re.compile(r"premier empire", re.IGNORECASE), "Premier Empire"),
+    (re.compile(r"cent[- ]jours", re.IGNORECASE), "Cent-Jours"),
+    (re.compile(r"territoires perdus|récup[ée]r", re.IGNORECASE), "Territoires récupérés"),
+    (re.compile(r"familles aristocratiques", re.IGNORECASE), "Aristocratie montante"),
+    (re.compile(r"pouvoir imp[ée]rial", re.IGNORECASE), "Pouvoir impérial fragilisé"),
+    (re.compile(r"guerre entre héritiers", re.IGNORECASE), "Guerre entre héritiers"),
+    (re.compile(r"succession monarchique est interrompue|succession monarchique", re.IGNORECASE), "Interrègne"),
+    (re.compile(r"issu de la dynastie des ([^.,;:]+)", re.IGNORECASE), "Dynastie des \\1"),
+)
+
+
+def normalize_summary_text(text: str) -> str:
     cleaned = re.sub(r"\s+", " ", text).strip()
     if not cleaned:
         return ""
-    cleaned = cleaned.replace("Â«", "").replace("Â»", "").replace('"', "")
+    cleaned = re.sub(r"[«»\"]", "", cleaned)
+    return cleaned
 
-    patterns = (
-        r"\best\b\s+([^,.;:]+)",
-        r"\best marqué par\b\s+([^,.;:]+)",
-        r"\bmarque\b\s+([^,.;:]+)",
-        r"\bvoit\b\s+([^,.;:]+)",
-        r"\bdevient\b\s+([^,.;:]+)",
-        r"\bparvient à\b\s+([^,.;:]+)",
-        r"\bfait\b\s+([^,.;:]+)",
+
+def shorten_summary_phrase(text: str, max_words: int) -> str:
+    words = text.split()
+    if len(words) <= max_words:
+        return text
+    return " ".join(words[:max_words]).rstrip(" ,;:.")
+
+
+def essential_summary_phrase(text: str, max_words: int = 12, max_chars: int = 72) -> str:
+    cleaned = normalize_summary_text(text)
+    if not cleaned:
+        return ""
+
+    lower = cleaned.lower()
+    for pattern, replacement in SUMMARY_REWRITES:
+        match = pattern.search(lower)
+        if match:
+            if "\\1" in replacement and match.groups():
+                return replacement.replace("\\1", match.group(1).strip().title())
+            return replacement
+
+    reign_match = re.search(
+        r"^Règne de ([^,]+?) de (\d{3,4}) à (\d{3,4})\.?$",
+        cleaned,
+        flags=re.IGNORECASE,
     )
-    for pattern in patterns:
-        match = re.search(pattern, cleaned, flags=re.IGNORECASE)
-        if not match:
-            continue
-        phrase = re.sub(r"\s+", " ", match.group(1)).strip(" ,;:.")
-        if not phrase:
-            continue
-        words = phrase.split()
-        if len(words) > max_words:
-            phrase = " ".join(words[:max_words])
-        if len(phrase) > max_chars:
-            phrase = " ".join(phrase.split()[:max_words])
-        return phrase[:1].upper() + phrase[1:] if phrase else phrase
+    if reign_match:
+        name = reign_match.group(1).strip()
+        start_year = reign_match.group(2)
+        end_year = reign_match.group(3)
+        return f"Règne de {name} {start_year} - {end_year}"
 
-    return compact_phrase(cleaned, max_words=max_words, max_chars=max_chars)
+    royal_match = re.search(
+        r"roi de france de (\d{3,4}) à (\d{3,4}|sa mort)\b",
+        lower,
+        flags=re.IGNORECASE,
+    )
+    if royal_match:
+        return f"Roi de France de {royal_match.group(1)} à {royal_match.group(2)}"
+
+    francs_match = re.search(
+        r"roi des francs(?: saliens)?(?: de| jusqu['’]en)? (\d{3,4}) (?:à|jusqu['’]en) (\d{3,4}|sa mort)\b",
+        lower,
+        flags=re.IGNORECASE,
+    )
+    if francs_match:
+        return f"Roi des Francs de {francs_match.group(1)} à {francs_match.group(2)}"
+
+    aquitaine_match = re.search(
+        r"roi d['’]aquitaine(?: jusqu['’]en)? (\d{3,4})",
+        lower,
+        flags=re.IGNORECASE,
+    )
+    if aquitaine_match:
+        return f"Roi d'Aquitaine jusqu'en {aquitaine_match.group(1)}"
+
+    empereur_match = re.search(
+        r"empereur d['’]occident(?: de)? (\d{3,4})?(?: à (\d{3,4}))?",
+        lower,
+        flags=re.IGNORECASE,
+    )
+    if empereur_match and empereur_match.group(1):
+        start_year = empereur_match.group(1)
+        end_year = empereur_match.group(2) or "sa mort"
+        return f"Empereur d'Occident de {start_year} à {end_year}"
+
+    emperor_france_match = re.search(
+        r"empereur des français de (\d{3,4}) à (\d{3,4}|sa mort)\b",
+        lower,
+        flags=re.IGNORECASE,
+    )
+    if emperor_france_match:
+        return f"Empereur des Français de {emperor_france_match.group(1)} à {emperor_france_match.group(2)}"
+
+    emperor_france_title_match = re.search(
+        r"empereur des français\b",
+        lower,
+        flags=re.IGNORECASE,
+    )
+    if emperor_france_title_match:
+        return "Empereur des Français"
+
+    dynasty_match = re.search(
+        r"appartient à la dynastie des ([^.,;:]+)",
+        lower,
+        flags=re.IGNORECASE,
+    )
+    if dynasty_match:
+        dynasty = dynasty_match.group(1).strip()
+        return f"Dynastie des {dynasty}"
+
+    clause = re.split(r"(?<=[.!?])\s+", cleaned, maxsplit=1)[0]
+    clause = re.sub(r"^([^,]+,\s+){1,2}", "", clause)
+    clause = clause.strip(" ,;:.")
+    clause = shorten_summary_phrase(clause, max_words=max_words)
+    if max_chars > 0 and len(clause) > max_chars:
+        clause = shorten_summary_phrase(clause, max_words=max(4, max_words - 2))
+    if clause:
+        return clause[:1].upper() + clause[1:]
+    return ""
 
 
 def build_card_context(segment: dict[str, str | int]) -> dict[str, str | tuple[str, str]]:
@@ -365,16 +503,16 @@ def build_card_context(segment: dict[str, str | int]) -> dict[str, str | tuple[s
     highlight_1, highlight_2 = FEATURE_OVERRIDES.get(display_name, ("", ""))
     if not highlight_1:
         source_texts = [notes, str(segment.get("fait_1", "")).strip(), str(segment.get("fait_2", "")).strip()]
-        short_phrases = [compact_phrase(text, max_words=6, max_chars=40) for text in source_texts if text]
+        short_phrases = [essential_summary_phrase(text, max_words=8, max_chars=48) for text in source_texts if text]
         short_phrases = [phrase for phrase in short_phrases if phrase]
         if short_phrases:
             highlight_1 = short_phrases[0]
         if len(short_phrases) > 1:
             highlight_2 = short_phrases[1]
     if not highlight_1:
-        highlight_1 = compact_phrase(str(segment.get("fait_1", "")), max_words=6, max_chars=40)
+        highlight_1 = essential_summary_phrase(str(segment.get("fait_1", "")), max_words=8, max_chars=48)
     if not highlight_2:
-        highlight_2 = compact_phrase(str(segment.get("fait_2", "")), max_words=6, max_chars=40)
+        highlight_2 = essential_summary_phrase(str(segment.get("fait_2", "")), max_words=8, max_chars=48)
     return {
         "display_name": display_name,
         "dynasty": dynasty,
@@ -702,16 +840,34 @@ def draw_legend_panel(
     )
     draw.rounded_rectangle((x0 + 1, y0 + 1, x1 - 1, y1 - 1), radius=21, outline=(255, 255, 255, 12), width=1)
     title_font = load_font(17, bold=True)
-    item_font = load_font(18, bold=False)
     title = "DYNASTIES / ÉVÉNEMENTS"
     draw_tracked_text(draw, (x0 + 22, y0 + 18), title, title_font, (233, 193, 110, 255), tracking=1)
-    row_y = y0 + 62
-    chip_size = 28
-    row_gap = 18
-    for label, color in items:
-        draw.rounded_rectangle((x0 + 22, row_y + 4, x0 + 22 + chip_size, row_y + 4 + chip_size), radius=8, fill=(*color, 255))
-        draw.text((x0 + 64, row_y + 2), label, font=item_font, fill="#f5f1e8")
-        row_y += chip_size + row_gap
+    content_top = y0 + 62
+    content_bottom = y1 - 22
+    row_height = max(24, (content_bottom - content_top) // max(1, len(items)))
+    chip_size = min(26, max(16, row_height - 8))
+    label_x = x0 + 62
+    label_max_width = x1 - label_x - 18
+
+    for index, (label, color) in enumerate(items):
+        row_top = content_top + index * row_height
+        chip_y = row_top + (row_height - chip_size) // 2
+        draw.rounded_rectangle(
+            (x0 + 22, chip_y, x0 + 22 + chip_size, chip_y + chip_size),
+            radius=8,
+            fill=(*color, 255),
+        )
+        item_font, label_lines = fit_lines_to_width(
+            draw,
+            label,
+            label_max_width,
+            font_sizes=(18, 17, 16, 15, 14, 13, 12),
+            max_lines=1,
+            bold=False,
+        )
+        label_height = text_size(draw, label_lines[0], item_font)[1]
+        label_y = row_top + max(0, (row_height - label_height) // 2 - 1)
+        draw.text((label_x, label_y), label_lines[0], font=item_font, fill="#f5f1e8")
 
 
 def draw_header_block(frame: Image.Image, start_year: int, end_year: int) -> None:
@@ -814,8 +970,8 @@ def render_video(rows: list[dict[str, str]], output_path: Path, duration: float,
         frame = background.copy()
         draw = ImageDraw.Draw(frame, "RGBA")
 
-        draw.text((92, 68), "ROIS DE FRANCE", font=title_font, fill="#f4efe7")
-        draw.text((96, 136), "Timeline annuelle canonique de Clovis Ier à Louis-Philippe Ier", font=subtitle_font, fill="#d6dfeb")
+        draw.text((92, 68), "ROIS ET EMPEREURS DE FRANCE", font=title_font, fill="#f4efe7")
+        draw.text((96, 136), "Timeline annuelle canonique de Clovis Ier à Napoléon III", font=subtitle_font, fill="#d6dfeb")
 
         card = (84, 196, WIDTH - 84, 724)
         draw.rounded_rectangle(card, radius=34, fill=(8, 18, 32, 196), outline=(255, 255, 255, 24), width=2)
@@ -1002,20 +1158,48 @@ def render_video(rows: list[dict[str, str]], output_path: Path, duration: float,
         reign_text = f"{segment['start_year']} - {segment['end_year']}"
         draw.text((548, 431), reign_text, font=reign_font, fill=(233, 193, 110, 255))
 
-        summary_lines = [
+        summary_candidates = [
             essential_summary_phrase(str(segment.get("fait_1", "")).strip(), max_words=12, max_chars=84),
             essential_summary_phrase(str(segment.get("fait_2", "")).strip(), max_words=12, max_chars=84),
+            essential_summary_phrase(str(segment.get("fait_3", "")).strip(), max_words=12, max_chars=84),
+            context["highlights"][0],
+            context["highlights"][1],
         ]
-        summary_lines = [line for line in summary_lines if line]
+
+        def is_weak_summary(value: str) -> bool:
+            lower_value = value.lower()
+            return (
+                lower_value.startswith("règne de ")
+                or lower_value.startswith("roi ")
+                or lower_value.startswith("dynastie des ")
+                or lower_value.startswith("né ")
+                or lower_value.startswith("mort ")
+                or "appartient à la dynastie" in lower_value
+                or "figure dans la succession" in lower_value
+                or lower_value.startswith("issu de la dynastie")
+            )
+
+        summary_lines: list[str] = []
+        weak_candidates: list[str] = []
+        seen_candidates: set[str] = set()
+        for candidate in summary_candidates:
+            if not candidate:
+                continue
+            key = candidate.lower()
+            if key in seen_candidates:
+                continue
+            seen_candidates.add(key)
+            if is_weak_summary(candidate):
+                weak_candidates.append(candidate)
+                continue
+            summary_lines.append(candidate)
+            if len(summary_lines) >= 2:
+                break
         if len(summary_lines) < 2:
-            fallback_lines = [
-                essential_summary_phrase(str(segment.get("fait_3", "")).strip(), max_words=12, max_chars=84),
-                context["highlights"][0],
-                context["highlights"][1],
-            ]
-            for line in fallback_lines:
-                if line and line not in summary_lines:
-                    summary_lines.append(line)
+            for candidate in weak_candidates:
+                if candidate.lower() in {line.lower() for line in summary_lines}:
+                    continue
+                summary_lines.append(candidate)
                 if len(summary_lines) >= 2:
                     break
         if not summary_lines:
@@ -1060,7 +1244,7 @@ def render_video(rows: list[dict[str, str]], output_path: Path, duration: float,
                 ex = sx + 4
             draw.rounded_rectangle((sx, timeline_top + 4, ex, timeline_top + timeline_height - 4), radius=14, fill=hex_to_rgb(str(band["color"])) + (230,))
 
-        tick_years = (400, 800, 1000, 1200, 1400, 1600, 1800)
+        tick_years = (400, 800, 1000, 1200, 1400, 1600, 1800, 1870)
         for tick in tick_years:
             x = year_to_x(tick)
             draw.line((x, timeline_top - 18, x, timeline_top + timeline_height + 18), fill=(255, 255, 255, 80), width=2)

@@ -31,8 +31,14 @@ def main() -> None:
         label = f"{row['display_name']} ({start_year}-{end_year})"
         ax.text(start_year + 0.35, y, label, va="center", ha="left", fontsize=8.5, color="white", fontweight="bold")
 
-    ax.set_title("Rois de France - timeline canonique 481-1848", fontsize=22, fontweight="bold", pad=18)
-    ax.text(481, len(rows) + 1.2, "Merovingiens, Carolingiens, Capetiens, Valois, Bourbons, Orleans", fontsize=12, color="#334e68")
+    ax.set_title("Rois et empereurs de France - timeline canonique 481-1870", fontsize=22, fontweight="bold", pad=18)
+    ax.text(
+        481,
+        len(rows) + 1.2,
+        "Merovingiens, Carolingiens, Capetiens, Valois, Bourbons, Orleans, Republiques et Empires",
+        fontsize=12,
+        color="#334e68",
+    )
     ax.set_xlabel("Annee", fontsize=12)
     ax.set_xlim(476, 1852)
     ax.set_yticks([])

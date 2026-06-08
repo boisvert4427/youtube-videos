@@ -10,11 +10,19 @@ INPUT_CSV = PROJECT_ROOT / "data" / "raw" / "france_kings_reigns.csv"
 OUTPUT_CSV = PROJECT_ROOT / "data" / "processed" / "france_kings_yearly_timeline.csv"
 
 YEAR_START = 481
-YEAR_END = 1848
+YEAR_END = 1870
 GAP_YEARS = {
     (738, 742): ("No king", "No king", "Transition", "#6c757d", "", "Interregnum before Childeric III"),
     (841, 842): ("No king", "No king", "Transition", "#6c757d", "", "Partition struggle after Louis I"),
-    (1793, 1813): ("No king", "No king", "Revolution and Empire", "#6c757d", "", "Monarchy interrupted"),
+    (1793, 1803): ("No king", "No king", "Revolution and Empire", "#6c757d", "", "Monarchy interrupted"),
+    (1848, 1851): (
+        "Second Republic",
+        "Deuxième République",
+        "Deuxième République",
+        "#6c757d",
+        "",
+        "Republic between the July Monarchy and the Second Empire",
+    ),
 }
 
 

@@ -38,7 +38,15 @@ du template NBA bracket 2025.
 - Pour les gros changements visuels, garder une hierarchie claire: titre, fond, lignes, logos, scores.
 - Le format de sortie est souvent vertical 1080x1920 pour les shorts.
 - Pour les timelines historiques, privilegier une legende integree a la frise et garder les textes contenus dans leur carte.
-- Pour le module history, la sortie canonique est `history/data/processed/france_kings_timeline_481_1830_300s_60fps_audio.mp4`.
+- Pour le module history, la sortie canonique est `history/data/processed/france_kings_timeline_481_1870_300s_60fps_audio.mp4`.
+- La timeline des rois et empereurs couvre maintenant `481-1870`.
+- Le générateur de carte historique du territoire français est
+  `history/france_territory/scripts/generate_france_territory_video.py`.
+- La carte du territoire français repose sur des jalons datés fixes et une
+  interpolation visuelle entre deux cartes de reference ; ne pas inventer de
+  frontieres continues comme si elles etaient exactes d'une annee a l'autre.
+- Les surfaces anciennes de cette carte sont des reconstitutions schématiques ;
+  conserver les avertissements de méthode dans l'image et dans `SOURCES.md`.
 
 ## NBA Playoff Bracket 2025
 

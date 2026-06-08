@@ -22,6 +22,8 @@ MANUAL_COMMONS_FILES = {
     "Robert II le Pieux": "File:Blondel - Robert II of France.jpg",
     "Philippe I": "File:Philippe Ier.jpg",
     "Louis VI le Gros": "File:Louis VI le Gros.jpg",
+    "Napoléon Ier": "File:Napoleon I (5227641).jpg",
+    "Napoléon III": "File:Napoleon III by Franz Xaver Winterhalter.png",
 }
 
 

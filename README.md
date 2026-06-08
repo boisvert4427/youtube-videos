@@ -37,8 +37,10 @@ Fichiers principaux:
 - Portraits: `history/data/raw/portraits/`
 - Preview image: `history/data/processed/france_kings_timeline_preview.png`
 - Preview video court: `history/data/processed/france_kings_timeline_preview_10s_15fps.mp4`
-- Video finale canonique: `history/data/processed/france_kings_timeline_481_1830_300s_60fps_audio.mp4`
+- Video finale canonique: `history/data/processed/france_kings_timeline_481_1870_300s_60fps_audio.mp4`
 - La video de sortie ajoute une legende integree a la frise et garde les textes contenus dans la carte.
+- Carte animee du territoire francais, basee sur des jalons fixes et une interpolation visuelle :
+  `history/france_territory/scripts/generate_france_territory_video.py`
 
 Commandes:
 
