@@ -429,11 +429,20 @@ def _make_background() -> Image.Image:
     return frame
 
 
-def _stage_winner_label(state: PlayerState, fill: str) -> str:
-    color_key = _ascii_key(state.player_name)
-    if color_key in RIDER_COLORS:
-        return RIDER_COLORS[color_key]
-    return fill
+def _build_rider_color_map(snapshots: list[Snapshot]) -> dict[str, str]:
+    color_map: dict[str, str] = {}
+    fallback_index = 0
+    for snapshot in snapshots:
+        for state in snapshot.states:
+            if state.player_name in color_map:
+                continue
+            explicit_color = RIDER_COLORS.get(_ascii_key(state.player_name))
+            if explicit_color is not None:
+                color_map[state.player_name] = explicit_color
+                continue
+            color_map[state.player_name] = DEFAULT_BAR_COLORS[fallback_index % len(DEFAULT_BAR_COLORS)]
+            fallback_index += 1
+    return color_map
 
 
 def render_video(
@@ -464,6 +473,7 @@ def render_video(
     flag_cache = _build_flag_cache(all_states, flags_dir)
     photo_cache = _build_photo_cache(all_states, photos_dir, 58)
     priorities = _build_stable_snapshot_priorities(snapshots)
+    rider_color_map = _build_rider_color_map(snapshots)
 
     periods = len(snapshots) - 1
     transition_duration = max(0.1, duration - max(0.0, final_hold_duration))
@@ -539,8 +549,8 @@ def render_video(
         draw.rounded_rectangle(year_badge, radius=28, fill=(246, 208, 91, 255))
         year_text = str(nxt.year)
         year_bbox = draw.textbbox((0, 0), year_text, font=year_font)
-        year_x = year_badge[0] + (year_badge[2] - year_badge[0] - (year_bbox[2] - year_bbox[0])) // 2
-        year_y = year_badge[1] + (year_badge[3] - year_badge[1] - (year_bbox[3] - year_bbox[1])) // 2 - 3
+        year_x = (year_badge[0] + year_badge[2] - (year_bbox[2] - year_bbox[0])) // 2 - year_bbox[0]
+        year_y = (year_badge[1] + year_badge[3] - (year_bbox[3] - year_bbox[1])) // 2 - year_bbox[1]
         draw.text((year_x, year_y), year_text, font=year_font, fill="#10233f")
 
         summary_lines = _parse_season_summary(nxt.season_summary)
@@ -577,7 +587,7 @@ def render_video(
                 fill="#132742",
             )
 
-        items: list[tuple[int, float, PlayerState, int, int]] = []
+        items: list[tuple[int, float, PlayerState, int]] = []
         for state in top_states:
             prev_idx = prev_rank.get(state.player_name, top_n + 1)
             next_idx = next_rank.get(state.player_name, top_n + 1)
@@ -595,14 +605,13 @@ def render_video(
             y = base_y + y_idx * (row_h + row_gap)
             bar_w = max(108, int((state.titles / axis_cap) * bar_max_w))
             moving_up = 1 if next_idx < prev_idx else 0
-            color_rank = next_idx if next_idx <= top_n else prev_idx
-            items.append((moving_up, y, state, bar_w, int(color_rank)))
+            items.append((moving_up, y, state, bar_w))
         items.sort(key=lambda item: (item[0], item[1]))
 
-        for _, y, state, bar_w, color_rank in items:
+        for _, y, state, bar_w in items:
             y0 = int(y)
             y1 = y0 + row_h
-            color = _stage_winner_label(state, DEFAULT_BAR_COLORS[color_rank % len(DEFAULT_BAR_COLORS)])
+            color = rider_color_map[state.player_name]
             text_color = _text_on(color)
             outline = _mix_rgb(color, (255, 255, 255), 0.18)
             highlight = _mix_rgb(color, (255, 255, 255), 0.30)

@@ -382,6 +382,26 @@ Source de donnees:
 
 - Les pages annuelles du Tour de France sur Wikipedia, de 1947 a 2025.
 
+## Tour de France Stage Wins Race Shorts
+
+Fichiers principaux:
+
+- Script principal: `video_generator/cycling/generate_tour_de_france_stage_wins_race_shorts_moviepy.py`
+- Wrapper: `video_generator/generate_tour_de_france_stage_wins_race_shorts_moviepy.py`
+- Sortie finale: `data/processed/cycling/tour_de_france/tour_de_france_stage_wins_postwar_1947_2025_shorts.mp4`
+
+Comment est faite la video:
+
+- Format vertical `1080x1920`, duree par defaut `60s`, `60 fps`.
+- Bar chart race du top 12 cumule depuis 1947.
+- Portraits, drapeaux et couleurs fixes par coureur.
+- Annee centree dans le header et resume des principaux vainqueurs de chaque edition.
+- Les graduations restent derriere les barres et les changements de rang gardent la barre montante au-dessus.
+
+Commande:
+
+- `python video_generator/generate_tour_de_france_stage_wins_race_shorts_moviepy.py`
+
 ## Template Tour des Flandres Shorts
 
 Fichiers principaux:
@@ -680,6 +700,32 @@ Caractere du template:
 Commande:
 
 - `python video_generator/generate_federer_nadal_djokovic_age_race_shorts_moviepy.py`
+
+## World Population Race
+
+Fichiers principaux:
+
+- Builder CSV: `scraper/demography/build_world_population_timeseries_csv.py`
+- Wrapper builder: `scraper/build_world_population_timeseries_csv.py`
+- Generateur: `video_generator/demography/generate_world_population_race_moviepy.py`
+- Wrapper video: `video_generator/generate_world_population_race_moviepy.py`
+- CSV: `data/processed/demography/world_population/world_population_1960_2024.csv`
+- Sortie: `data/processed/demography/world_population/world_population_race_1960_2024_3min.mp4`
+
+Commandes:
+
+- `python scraper/build_world_population_timeseries_csv.py`
+- `python video_generator/generate_world_population_race_moviepy.py`
+
+Caracteristiques:
+
+- Format paysage `1920x1080`, duree par defaut `180s`, `60 fps`.
+- Top 12 des pays par population totale entre 1960 et 2024.
+- Donnees `1960-2024` depuis l'API officielle World Bank, indicateur `SP.POP.TOTL`.
+- Les agregats regionaux et economiques World Bank sont exclus via les metadonnees pays.
+- Couleur fixe par pays, drapeaux locaux et valeurs affichees au dixieme de million, meme au-dessus d'un milliard.
+- Les populations et longueurs de barres evoluent lineairement entre deux annees.
+- Annee centree dans son wrapper, graduations derriere les barres et barre montante au premier plan.
 
 ## Template Ronaldo Messi Goals By Age Race Shorts
 

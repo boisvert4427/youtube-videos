@@ -133,6 +133,21 @@ du template NBA bracket 2025.
 - Garder le panneau de droite lisible et compact, avec les leaders annuels.
 - Ne pas compter les team time trials comme des victoires d'etape individuelles.
 
+## Tour de France Stage Wins Race Shorts
+
+- Script canonique: `video_generator/cycling/generate_tour_de_france_stage_wins_race_shorts_moviepy.py`
+- Wrapper: `video_generator/generate_tour_de_france_stage_wins_race_shorts_moviepy.py`
+- Sortie par defaut: `data/processed/cycling/tour_de_france/tour_de_france_stage_wins_postwar_1947_2025_shorts.mp4`
+- Format vertical `1080x1920`, duree par defaut `60s`, `60 fps`
+- Contenu: top 12 des victoires d'etape cumulees depuis 1947, avec portraits, drapeaux et resume annuel
+
+### Points Sensibles
+
+- Chaque coureur doit garder la meme couleur pendant toute la race.
+- L'annee doit rester centree dans son badge.
+- Les graduations doivent passer derriere les barres.
+- Lors d'un changement de rang, la barre qui monte doit passer visiblement au-dessus.
+
 ## Federer vs Nadal H2H Score Timeline Shorts
 
 - Script canonique: `video_generator/tennis/generate_federer_vs_nadal_h2h_scores_shorts_moviepy.py`
@@ -280,6 +295,26 @@ Caractere du template:
 - La ligne horizontale doit continuer jusqu'au bord droit et rester derriere les ronds, pas s'arreter au rond.
 - Les valeurs dans les barres sont les points cumules; les ronds affichent les points de la saison suivante par age.
 - Les donnees viennent de Basketball-Reference et peuvent evoluer pour LeBron tant que sa carriere continue.
+
+## World Population Race
+
+- Builder canonique: `scraper/demography/build_world_population_timeseries_csv.py`
+- Generateur canonique: `video_generator/demography/generate_world_population_race_moviepy.py`
+- CSV par defaut: `data/processed/demography/world_population/world_population_1960_2024.csv`
+- Sortie par defaut: `data/processed/demography/world_population/world_population_race_1960_2024_3min.mp4`
+- Format paysage `1920x1080`, duree `180s`, `60 fps`, top 12.
+- Source unique `1960-2024`: API officielle World Bank `SP.POP.TOTL`.
+
+### Points Sensibles
+
+- Exclure tous les agregats World Bank avant le classement.
+- Chaque pays garde la meme couleur pendant toute la race.
+- Les populations et les longueurs de barres doivent progresser lineairement entre deux annees.
+- Les valeurs restent en millions avec une decimale, meme au-dessus d'un milliard.
+- L'annee reste centree dans son badge.
+- Les graduations restent derriere les barres.
+- La barre qui monte doit etre dessinee au-dessus lors d'un changement de rang.
+- Verifier une preview courte avant le rendu final de trois minutes.
 
 ## Snapshots et frames YouTube
 
