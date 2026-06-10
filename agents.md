@@ -114,6 +114,25 @@ du template NBA bracket 2025.
 - Garder un scroll horizontal lent avec des proportions compactes.
 - Le CSV doit rester alimente depuis le PDF officiel ATP et le schema doit suivre si la source change.
 
+## Tour de France Stage Wins Post-War Race
+
+- Builder CSV: `scraper/cycling/build_tour_de_france_postwar_stage_wins_csv.py`
+- Script canonique: `video_generator/cycling/generate_tour_de_france_stage_wins_race_moviepy.py`
+- Wrapper: `video_generator/generate_tour_de_france_stage_wins_race_moviepy.py`
+- CSV par defaut: `data/processed/cycling/tour_de_france/tour_de_france_stage_wins_postwar_1947_2025.csv`
+- Sortie par defaut: `data/processed/cycling/tour_de_france/tour_de_france_stage_wins_postwar_1947_2025.mp4`
+- Format paysage `1920x1080`, duree par defaut `240s`, `30 fps`
+- Contenu: victoires d'etape cumulees du Tour de France depuis 1947
+- Les prologues et les contre-la-montre individuels sont comptes, mais les team time trials sont exclus.
+- Source de donnees: pages annuelles du Tour de France sur Wikipedia, avec validation sur la page des records du Tour.
+- Les portraits et drapeaux locaux sont utilises si disponibles dans `data/raw/player_photos/` et `data/raw/flags/`.
+
+### Points Sensibles
+
+- Verifier que le top 12 final reste lisible avec les grands noms historiques.
+- Garder le panneau de droite lisible et compact, avec les leaders annuels.
+- Ne pas compter les team time trials comme des victoires d'etape individuelles.
+
 ## Federer vs Nadal H2H Score Timeline Shorts
 
 - Script canonique: `video_generator/tennis/generate_federer_vs_nadal_h2h_scores_shorts_moviepy.py`

@@ -358,6 +358,30 @@ Notes data:
 - Les annees recentes ont plus souvent le top 5 GC complet.
 - Les annees anciennes peuvent rester partielles si Wikipedia ne fournit pas de tableau final exploitable.
 
+## Tour de France Stage Wins Post-War Race
+
+Fichiers principaux:
+
+- CSV: `data/processed/cycling/tour_de_france/tour_de_france_stage_wins_postwar_1947_2025.csv`
+- Builder CSV: `python scraper/cycling/build_tour_de_france_postwar_stage_wins_csv.py`
+- Video finale: `python video_generator/cycling/generate_tour_de_france_stage_wins_race_moviepy.py`
+
+Compatibilite:
+
+- Le wrapper `python video_generator/generate_tour_de_france_stage_wins_race_moviepy.py` reste utilisable.
+
+Comment est faite la video:
+
+- Format paysage `1920x1080`, duree par defaut `240s`, `30 fps`.
+- Classement cumule des victoires d'etape depuis 1947, en excluant les team time trials.
+- Les prologues et les contre-la-montre individuels sont comptes comme des victoires d'etape.
+- Le panneau de droite affiche les leaders de chaque edition annuelle.
+- Les portraits et drapeaux locaux sont utilises si disponibles dans `data/raw/player_photos/` et `data/raw/flags/`.
+
+Source de donnees:
+
+- Les pages annuelles du Tour de France sur Wikipedia, de 1947 a 2025.
+
 ## Template Tour des Flandres Shorts
 
 Fichiers principaux:
