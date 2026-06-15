@@ -727,6 +727,165 @@ Caracteristiques:
 - Les populations et longueurs de barres evoluent lineairement entre deux annees.
 - Annee centree dans son wrapper, graduations derriere les barres et barre montante au premier plan.
 
+## World Population Race Shorts
+
+Fichiers principaux:
+
+- Generateur: `video_generator/demography/generate_world_population_race_shorts_moviepy.py`
+- Wrapper: `video_generator/generate_world_population_race_shorts_moviepy.py`
+- Sortie: `data/processed/demography/world_population/world_population_race_1960_2024_shorts.mp4`
+
+Caracteristiques:
+
+- Format vertical `1080x1920`, duree par defaut `60s`, `60 fps`.
+- Meme top 12 World Bank `1960-2024` que la version paysage.
+- Valeurs et barres lineaires, au dixieme de million meme au-dessus d'un milliard.
+- Drapeaux, couleurs fixes, annee centree et graduations derriere les barres.
+
+Commande:
+
+- `python video_generator/generate_world_population_race_shorts_moviepy.py`
+
+## France Female First Names Race
+
+Fichiers principaux:
+
+- Builder CSV: `scraper/demography/build_france_female_first_names_timeseries_csv.py`
+- Wrapper builder: `scraper/build_france_female_first_names_timeseries_csv.py`
+- Generateur: `video_generator/demography/generate_france_female_first_names_race_moviepy.py`
+- Wrapper video: `video_generator/generate_france_female_first_names_race_moviepy.py`
+- CSV: `data/processed/demography/france_female_first_names/france_female_first_names_1900_2024.csv`
+- Sortie: `data/processed/demography/france_female_first_names/france_female_first_names_race_1900_2024_3min.mp4`
+- Miniature: `data/processed/demography/france_female_first_names/france_female_first_names_thumbnail_1900_2024.png`
+
+Caracteristiques:
+
+- Format paysage `1920x1080`, duree par defaut `180s`, `60 fps`, top 12.
+- Naissances annuelles des prenoms feminins en France entre 1900 et 2024.
+- Donnees nationales officielles Insee, avec les effectifs arrondis au multiple de cinq.
+- Interpolation lineaire entre deux annees, couleurs fixes par prenom et axe dynamique.
+- Annee centree, graduations derriere les barres et barre montante au premier plan.
+- Footer neutre sans source affichee dans la video.
+- Miniature YouTube `1280x720` sur fond blanc casse, inspiree du style editorial `WARS`.
+
+Commandes:
+
+- `python scraper/build_france_female_first_names_timeseries_csv.py --refresh`
+- `python video_generator/generate_france_female_first_names_race_moviepy.py`
+
+## France Female First Names Race Shorts
+
+Fichiers principaux:
+
+- Generateur: `video_generator/demography/generate_france_female_first_names_race_shorts_moviepy.py`
+- Wrapper video: `video_generator/generate_france_female_first_names_race_shorts_moviepy.py`
+- CSV: `data/processed/demography/france_female_first_names/france_female_first_names_1900_2024.csv`
+- Sortie: `data/processed/demography/france_female_first_names/france_female_first_names_race_1900_2024_shorts.mp4`
+
+Caracteristiques:
+
+- Format vertical `1080x1920`, duree par defaut `100s`, `60 fps`, top 12.
+- Intro de `4s` et hold final de `8s` pour laisser respirer la lecture.
+- Meme serie annuelle Insee `1900-2024`, avec couleurs fixes, interpolation lineaire et axe dynamique.
+- Annee centree dans son wrapper, graduations derriere les barres et barre montante au premier plan.
+- Footer neutre sans source affichee dans la video.
+
+Commande:
+
+- `python video_generator/generate_france_female_first_names_race_shorts_moviepy.py`
+
+## France Male First Names Race
+
+Fichiers principaux:
+
+- Builder CSV: `scraper/demography/build_france_male_first_names_timeseries_csv.py`
+- Wrapper builder: `scraper/build_france_male_first_names_timeseries_csv.py`
+- Generateur: `video_generator/demography/generate_france_male_first_names_race_moviepy.py`
+- Wrapper video: `video_generator/generate_france_male_first_names_race_moviepy.py`
+- CSV: `data/processed/demography/france_male_first_names/france_male_first_names_1900_2024.csv`
+- Sortie: `data/processed/demography/france_male_first_names/france_male_first_names_race_1900_2024_3min.mp4`
+
+Caracteristiques:
+
+- Format paysage `1920x1080`, duree par defaut `180s`, `60 fps`, top 12.
+- Naissances annuelles des prenoms masculins en France entre 1900 et 2024.
+- Donnees nationales officielles Insee, avec les effectifs arrondis au multiple de cinq.
+- Interpolation lineaire entre deux annees, couleurs fixes par prenom et axe dynamique.
+- Annee centree, graduations derriere les barres et barre montante au premier plan.
+- Footer neutre sans source affichee dans la video.
+
+Commandes:
+
+- `python scraper/build_france_male_first_names_timeseries_csv.py --refresh`
+- `python video_generator/generate_france_male_first_names_race_moviepy.py`
+
+## France Male First Names Race Shorts
+
+Fichiers principaux:
+
+- Generateur: `video_generator/demography/generate_france_male_first_names_race_shorts_moviepy.py`
+- Wrapper video: `video_generator/generate_france_male_first_names_race_shorts_moviepy.py`
+- CSV: `data/processed/demography/france_male_first_names/france_male_first_names_1900_2024.csv`
+- Sortie: `data/processed/demography/france_male_first_names/france_male_first_names_race_1900_2024_shorts.mp4`
+
+Caracteristiques:
+
+- Format vertical `1080x1920`, duree par defaut `100s`, `60 fps`, top 12.
+- Intro de `4s` et hold final de `8s` pour laisser respirer la lecture.
+- Meme serie annuelle Insee `1900-2024`, avec couleurs fixes, interpolation lineaire et axe dynamique.
+- Annee centree dans son wrapper, graduations derriere les barres et barre montante au premier plan.
+- Footer neutre sans source affichee dans la video.
+
+Commande:
+
+- `python video_generator/generate_france_male_first_names_race_shorts_moviepy.py`
+
+## Browser Market Share Race Shorts
+
+Fichiers principaux:
+
+- Builder CSV: `scraper/technology/build_browser_market_share_timeseries_csv.py`
+- Wrapper builder: `scraper/build_browser_market_share_timeseries_csv.py`
+- Generateur: `video_generator/technology/generate_browser_market_share_race_shorts_moviepy.py`
+- Wrapper video: `video_generator/generate_browser_market_share_race_shorts_moviepy.py`
+- CSV: `data/processed/technology/browser_market_share/browser_market_share_1995_2026.csv`
+- Sortie: `data/processed/technology/browser_market_share/browser_market_share_race_1995_2026_shorts.mp4`
+
+Caracteristiques:
+
+- Format vertical `1080x1920`, duree par defaut `60s`, `60 fps`, top 8.
+- Historique mensuel `1995-2026`, avec couleurs fixes et logos de navigateurs.
+- Points historiques `1995-2008` interpolés mensuellement et raccord 2008 harmonise.
+- Serie mensuelle Statcounter mondiale, tous appareils, a partir de janvier 2009.
+- Axe fixe `0-100%`, date centree, graduations derriere les barres et barre montante au premier plan.
+- Footer neutre sans source affichee dans la video.
+
+Commandes:
+
+- `python scraper/build_browser_market_share_timeseries_csv.py --refresh`
+- `python video_generator/generate_browser_market_share_race_shorts_moviepy.py`
+
+## Browser Market Share Race
+
+Fichiers principaux:
+
+- Generateur: `video_generator/technology/generate_browser_market_share_race_moviepy.py`
+- Wrapper: `video_generator/generate_browser_market_share_race_moviepy.py`
+- CSV: `data/processed/technology/browser_market_share/browser_market_share_1995_2026.csv`
+- Sortie: `data/processed/technology/browser_market_share/browser_market_share_race_1995_2026_3min.mp4`
+
+Caracteristiques:
+
+- Format paysage `1920x1080`, duree par defaut `180s`, `60 fps`, top 8.
+- Meme serie harmonisee `1995-2026`, memes logos et couleurs fixes que le Short.
+- Axe fixe `0-100%`, date centree et valeurs affichees au dixieme de point.
+- Graduations derriere les barres et barre montante au premier plan.
+- Footer neutre sans source affichee dans la video.
+
+Commande:
+
+- `python video_generator/generate_browser_market_share_race_moviepy.py`
+
 ## Template Ronaldo Messi Goals By Age Race Shorts
 
 Fichiers principaux:
