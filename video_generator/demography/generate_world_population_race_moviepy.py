@@ -51,6 +51,13 @@ FINAL_HOLD_DURATION = 10.0
 
 TITLE = "WORLD POPULATION RACE"
 SUBTITLE = "TOP 12 COUNTRIES | 1960-2024"
+LEFT_HEADER_LABEL = "COUNTRY"
+RIGHT_HEADER_LABEL = "POPULATION"
+FOOTER = "SOURCE: WORLD BANK | INDICATOR SP.POP.TOTL"
+
+
+def YEAR_LABEL(snapshot: Snapshot) -> str:
+    return str(snapshot.year)
 
 DISPLAY_NAME_ALIASES = {
     "Russian Federation": "Russia",
@@ -416,6 +423,9 @@ def render_video(
     value_font = _load_font(27, bold=True)
     rank_font = _load_font(24, bold=True)
     tick_font = _load_font(18, bold=True)
+    measure_canvas = Image.new("RGB", (1, 1))
+    measure_draw = ImageDraw.Draw(measure_canvas)
+    name_font_cache: dict[str, ImageFont.ImageFont] = {}
 
     header_box = (38, 34, WIDTH - 38, 170)
     insight_box = (830, 54, 1448, 150)
@@ -427,10 +437,18 @@ def render_video(
     bar_left = 430
     bar_right = 1762
     bar_max_width = bar_right - bar_left
+    name_max_width = bar_left - name_left - 12
     base_y = 246
     pitch = 64
     row_height = 48
     ranking_bottom = base_y + (top_n - 1) * pitch + row_height
+
+    def _name_font_for(text: str) -> ImageFont.ImageFont:
+        font = name_font_cache.get(text)
+        if font is None:
+            font = _fit_font_size(measure_draw, text, name_max_width, 27, 15, bold=True)
+            name_font_cache[text] = font
+        return font
 
     def make_frame(t: float) -> np.ndarray:
         frame = background.copy()
@@ -482,10 +500,10 @@ def render_video(
             _center_text(draw, line_rect, line, font, "#f4d39a" if line_index == 0 else "#eaf7f5")
 
         draw.rounded_rectangle(year_box, radius=30, fill=(244, 194, 107, 255), outline=(255, 235, 184, 180), width=2)
-        _center_text(draw, year_box, str(nxt.year), year_font, "#10273a")
+        _center_text(draw, year_box, YEAR_LABEL(nxt), year_font, "#10273a")
 
-        draw.text((name_left, 195), "COUNTRY", font=label_font, fill=(177, 210, 219, 205))
-        draw.text((bar_left + 18, 195), "POPULATION", font=label_font, fill=(177, 210, 219, 205))
+        draw.text((name_left, 195), LEFT_HEADER_LABEL, font=label_font, fill=(177, 210, 219, 205))
+        draw.text((bar_left + 18, 195), RIGHT_HEADER_LABEL, font=label_font, fill=(177, 210, 219, 205))
 
         tick_count = max(1, int(math.floor(axis_cap / max(tick_step, 1.0))))
         for tick_index in range(tick_count + 1):
@@ -550,10 +568,11 @@ def render_video(
                 )
                 frame.alpha_composite(flag, (flag_left, flag_y))
 
-            country_name = _truncate(draw, state.country_name, name_font, bar_left - name_left - 20)
-            name_bbox = draw.textbbox((0, 0), country_name, font=name_font)
+            country_name = state.country_name
+            name_font_state = _name_font_for(country_name)
+            name_bbox = draw.textbbox((0, 0), country_name, font=name_font_state)
             name_y = y0 + (row_height - (name_bbox[3] - name_bbox[1])) // 2 - name_bbox[1]
-            draw.text((name_left, name_y), country_name, font=name_font, fill="#f1f7f8")
+            draw.text((name_left, name_y), country_name, font=name_font_state, fill="#f1f7f8")
 
             draw.rounded_rectangle(
                 (bar_left + 6, y0 + 6, bar_left + bar_width + 6, y1 + 6),
@@ -585,7 +604,7 @@ def render_video(
             value_y = y0 + (row_height - (value_bbox[3] - value_bbox[1])) // 2 - value_bbox[1]
             draw.text((value_x, value_y), value_text, font=value_font, fill="#f7fbfc")
 
-        footer = "SOURCE: WORLD BANK | INDICATOR SP.POP.TOTL"
+        footer = FOOTER
         footer_font = _fit_font_size(draw, footer, WIDTH - 120, 19, 15, bold=True)
         footer_bbox = draw.textbbox((0, 0), footer, font=footer_font)
         draw.text(
