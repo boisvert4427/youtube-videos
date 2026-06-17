@@ -20,11 +20,12 @@ from video_generator.generate_ucl_barchart_race_moviepy import (
     build_audio_track,
 )
 from video_generator.technology.generate_browser_market_share_race_shorts_moviepy import (
-    AXIS_CAP,
     DEFAULT_INPUT,
     DEFAULT_LOGOS_DIR,
     BrowserState,
     Snapshot,
+    TICK_LABEL_FORMAT,
+    VALUE_LABEL_FORMAT,
     _build_color_map,
     _build_logo_cache,
     _build_priorities,
@@ -64,6 +65,30 @@ SUBTITLE_FONT_SIZE = 24
 LEFT_HEADER_LABEL = "BROWSER"
 RIGHT_HEADER_LABEL = "MARKET SHARE"
 FOOTER = "BROWSER MARKET SHARE | 1995-2026"
+
+
+def _nice_number(value: float) -> float:
+    if value <= 0:
+        return 1.0
+    exponent = math.floor(math.log10(value))
+    fraction = value / (10**exponent)
+    if fraction <= 1:
+        nice_fraction = 1
+    elif fraction <= 2:
+        nice_fraction = 2
+    elif fraction <= 2.5:
+        nice_fraction = 2.5
+    elif fraction <= 5:
+        nice_fraction = 5
+    else:
+        nice_fraction = 10
+    return nice_fraction * (10**exponent)
+
+
+def _axis_scale(maximum: float) -> tuple[float, float]:
+    step = _nice_number(maximum * 1.08 / 6.0)
+    cap = math.ceil(maximum * 1.08 / step) * step
+    return max(step, cap), step
 
 
 def ERA_LABEL(ranking_date: str) -> str:
@@ -172,6 +197,8 @@ def render_video(
     top_n: int,
     start_date: str | None = None,
     excluded_keys: set[str] | None = None,
+    axis_cap: float | None = None,
+    tick_step: float | None = None,
 ) -> Path:
     snapshots = load_snapshots(input_csv)
     if start_date is not None:
@@ -203,6 +230,12 @@ def render_video(
         ),
         *snapshots,
     ]
+
+    axis_scales = [
+        _axis_scale(max((state.market_share for state in snapshot.states[:top_n]), default=1.0))
+        for snapshot in snapshots
+    ]
+    axis_scales[0] = axis_scales[1]
 
     logos = _build_logo_cache(logos_dir)
     colors = _build_color_map(snapshots)
@@ -287,7 +320,7 @@ def render_video(
         )
         era_label = ERA_LABEL(display_snapshot.ranking_date)
         insight = (
-            f"Leader: {visible_leader.browser_name} {visible_leader.market_share:.1f}%"
+            f"Leader: {visible_leader.browser_name} {VALUE_LABEL_FORMAT(visible_leader.market_share)}"
             f"  |  {era_label}"
         )
         insight_font = insight_font_cache.get(insight)
@@ -325,14 +358,36 @@ def render_video(
         draw.text((name_left, 219), LEFT_HEADER_LABEL, font=label_font, fill=(177, 215, 222, 210))
         draw.text((bar_left + 18, 219), RIGHT_HEADER_LABEL, font=label_font, fill=(177, 215, 222, 210))
 
-        for tick in range(0, 101, 20):
-            x = bar_left + int((tick / AXIS_CAP) * bar_max_width)
+        axis_cap_value = axis_cap
+        tick_step_value = tick_step
+        if axis_cap_value is None or tick_step_value is None:
+            current_axis_cap = axis_scales[period_index][0] + (
+                axis_scales[period_index + 1][0] - axis_scales[period_index][0]
+            ) * value_alpha
+            current_tick_step = axis_scales[period_index][1] + (
+                axis_scales[period_index + 1][1] - axis_scales[period_index][1]
+            ) * value_alpha
+            if axis_cap_value is None:
+                axis_cap_value = current_axis_cap
+            if tick_step_value is None:
+                tick_step_value = current_tick_step
+        axis_cap_value = max(1.0, axis_cap_value)
+        tick_step_value = max(1.0, tick_step_value)
+
+        tick_values: list[float] = [0.0]
+        tick = tick_step_value
+        while tick < axis_cap_value - 1e-6:
+            tick_values.append(tick)
+            tick += tick_step_value
+
+        for tick in tick_values:
+            x = bar_left + int((tick / axis_cap_value) * bar_max_width)
             draw.line(
                 (x, 252, x, ranking_bottom + 16),
                 fill=(1, 8, 17, 105),
-                width=3 if tick == 0 else 2,
+                width=3 if math.isclose(tick, 0.0, abs_tol=1e-6) else 2,
             )
-            tick_text = f"{tick}%"
+            tick_text = TICK_LABEL_FORMAT(tick)
             bbox = draw.textbbox((0, 0), tick_text, font=tick_font)
             draw.text(
                 (x - (bbox[2] - bbox[0]) // 2, 218),
@@ -357,7 +412,10 @@ def render_video(
             previous_index = previous_rank.get(key, top_n + 1)
             target_index = target_rank.get(key, top_n + 1)
             entering = previous_index > top_n and target_index <= top_n
-            effective_previous = float(top_n + 1.8) if entering else float(previous_index)
+            # Dense landscape rankings need entrants to start just below the
+            # last visible row; otherwise the 10th row gets clipped off-screen.
+            entry_index = float(top_n - 0.15) if top_n > 8 else float(top_n + 1.8)
+            effective_previous = entry_index if entering else float(previous_index)
             movement_alpha = rank_alpha
             places_moved = abs(float(target_index) - effective_previous)
             if places_moved > 0:
@@ -373,7 +431,7 @@ def render_video(
                 movement_alpha,
             )
             row_y = base_y + y_index * pitch
-            bar_width = max(0, int((state.market_share / AXIS_CAP) * bar_max_width))
+            bar_width = max(0, int((state.market_share / axis_cap_value) * bar_max_width))
             moving_up = 1 if target_index < previous_index else 0
             render_items.append((moving_up, row_y, state, bar_width))
 
@@ -443,7 +501,7 @@ def render_video(
                         width=3,
                     )
 
-            value_text = f"{state.market_share:.1f}%"
+            value_text = VALUE_LABEL_FORMAT(state.market_share)
             value_bbox = draw.textbbox((0, 0), value_text, font=value_font)
             value_width = value_bbox[2] - value_bbox[0]
             value_x = min(

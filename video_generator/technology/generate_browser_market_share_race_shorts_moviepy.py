@@ -55,7 +55,11 @@ AXIS_CAP = 100.0
 
 TITLE = "BROWSER WARS"
 SUBTITLE = "MARKET SHARE HISTORY | 1995-2026"
+TITLE_FONT_SIZE = 73
+SUBTITLE_FONT_SIZE = 27
 FOOTER = "BROWSER MARKET SHARE | 1995-2026"
+TICK_LABEL_FORMAT = lambda value: f"{value:.0f}%"  # noqa: E731
+VALUE_LABEL_FORMAT = lambda value: f"{value:.1f}%"  # noqa: E731
 
 
 def ERA_LABEL(ranking_date: str) -> str:
@@ -405,6 +409,7 @@ def render_video(
     start_date: str | None = None,
     excluded_keys: set[str] | None = None,
     axis_cap: float = AXIS_CAP,
+    tick_step: float | None = None,
 ) -> Path:
     snapshots = load_snapshots(input_csv)
     if start_date is not None:
@@ -446,8 +451,8 @@ def render_video(
     axis_cap = max(1.0, axis_cap)
 
     background = _make_background()
-    title_font = _load_font(73, bold=True)
-    subtitle_font = _load_font(27, bold=True)
+    title_font = _load_font(TITLE_FONT_SIZE, bold=True)
+    subtitle_font = _load_font(SUBTITLE_FONT_SIZE, bold=True)
     date_font = _load_font(58, bold=True)
     insight_font_cache: dict[str, ImageFont.ImageFont] = {}
     name_font = _load_font(33, bold=True)
@@ -545,7 +550,7 @@ def render_video(
         )
         era_label = ERA_LABEL(display_snapshot.ranking_date)
         insight = (
-            f"Leader: {visible_leader.browser_name} {visible_leader.market_share:.1f}%"
+            f"Leader: {visible_leader.browser_name} {VALUE_LABEL_FORMAT(visible_leader.market_share)}"
             f"  |  {era_label}"
         )
         insight_font = insight_font_cache.get(insight)
@@ -567,12 +572,12 @@ def render_video(
             "#F2FAFC",
         )
 
-        tick_step = 5.0 if axis_cap <= 50.0 else 20.0
+        tick_step_value = tick_step if tick_step is not None else (5.0 if axis_cap <= 50.0 else 20.0)
         tick_values: list[float] = []
         tick = 0.0
         while tick < axis_cap - 1e-6:
             tick_values.append(tick)
-            tick += tick_step
+            tick += tick_step_value
         if not tick_values or not math.isclose(tick_values[-1], axis_cap, abs_tol=1e-6):
             tick_values.append(axis_cap)
         for tick in tick_values:
@@ -583,7 +588,7 @@ def render_video(
                 width=3 if tick == 0 else 2,
             )
             if tick:
-                tick_text = f"{tick:.0f}%"
+                tick_text = TICK_LABEL_FORMAT(tick)
                 bbox = draw.textbbox((0, 0), tick_text, font=tick_font)
                 draw.text(
                     (x - (bbox[2] - bbox[0]) // 2, base_y - 39),
@@ -650,7 +655,7 @@ def render_video(
                 monogram_font,
             )
 
-            value_text = f"{state.market_share:.1f}%"
+            value_text = VALUE_LABEL_FORMAT(state.market_share)
             value_bbox = draw.textbbox((0, 0), value_text, font=value_font)
             value_x = WIDTH - 28 - (value_bbox[2] - value_bbox[0])
             value_y = label_y + (label_height - (value_bbox[3] - value_bbox[1])) // 2 - value_bbox[1]

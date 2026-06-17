@@ -60,6 +60,10 @@ FINAL_HOLD_DURATION = 10.0
 TITLE = "PRÉNOMS FÉMININS"
 SUBTITLE = "LES PLUS DONNÉS EN FRANCE CHAQUE ANNÉE | 1900-2024"
 FOOTER = "PRÉNOMS FÉMININS | FRANCE | 1900-2024"
+LEADER_LABEL = "N°1"
+VALUE_SUFFIX = "naissances"
+LEFT_HEADER_LABEL = "PRÉNOM"
+RIGHT_HEADER_LABEL = "NAISSANCES"
 
 FEATURED_COLORS = {
     "Marie": "#E55B72",
@@ -398,7 +402,7 @@ def render_video(
             default=NameState("N/A", 0.0),
         )
         display_year = prev.year if value_alpha < 0.5 and prev.states else nxt.year
-        insight = f"N°1 : {visible_leader.first_name}  |  {_format_births(visible_leader.births)} naissances"
+        insight = f"{LEADER_LABEL} : {visible_leader.first_name}  |  {_format_births(visible_leader.births)} {VALUE_SUFFIX}"
         insight_font = insight_font_cache.get(insight)
         if insight_font is None:
             insight_font = _fit_font_size(
@@ -427,8 +431,8 @@ def render_video(
         )
         _center_text(draw, year_box, str(display_year), year_font, "#19283B")
 
-        draw.text((name_left, 210), "PRÉNOM", font=label_font, fill=(202, 218, 224, 210))
-        draw.text((bar_left + 18, 210), "NAISSANCES", font=label_font, fill=(202, 218, 224, 210))
+        draw.text((name_left, 210), LEFT_HEADER_LABEL, font=label_font, fill=(202, 218, 224, 210))
+        draw.text((bar_left + 18, 210), RIGHT_HEADER_LABEL, font=label_font, fill=(202, 218, 224, 210))
 
         tick_count = max(1, int(math.floor(axis_cap / max(tick_step, 1.0))))
         for tick_index in range(tick_count + 1):

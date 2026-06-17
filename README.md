@@ -886,6 +886,96 @@ Commande:
 
 - `python video_generator/generate_browser_market_share_race_moviepy.py`
 
+## Social Media Market Share Race
+
+Fichiers principaux:
+
+- Builder CSV: `scraper/technology/build_social_media_market_share_timeseries_csv.py`
+- Generateur: `video_generator/technology/generate_social_media_market_share_race_moviepy.py`
+- CSV: `data/processed/technology/social_media_market_share/social_media_market_share_2009_2026.csv`
+- Sortie: `data/processed/technology/social_media_market_share/social_media_market_share_race_2009_2026_top10_3min.mp4`
+
+Caracteristiques:
+
+- Format paysage `1920x1080`, duree par defaut `180s`, `60 fps`.
+- Serie mensuelle StatCounter mondiale, tous appareils, a partir d'avril 2009.
+- Les valeurs sont des parts de trafic / parts de marche en pourcentage, pas des nombres d'utilisateurs.
+- `Other` est exclu de la video pour garder le classement lisible.
+- Logos recuperes via favicons quand disponibles.
+
+Commandes:
+
+- `python scraper/technology/build_social_media_market_share_timeseries_csv.py --refresh`
+- `python video_generator/technology/generate_social_media_market_share_race_moviepy.py`
+
+## Video Game Sales Publishers Race
+
+Fichiers principaux:
+
+- Builder CSV: `scraper/games/build_video_game_sales_publishers_timeseries_csv.py`
+- Wrapper builder: `scraper/build_video_game_sales_publishers_timeseries_csv.py`
+- Generateur paysage: `video_generator/games/generate_video_game_sales_publishers_race_moviepy.py`
+- Generateur Shorts: `video_generator/games/generate_video_game_sales_publishers_race_shorts_moviepy.py`
+- Miniature: `video_generator/games/generate_video_game_sales_publishers_thumbnail.py`
+- CSV: `data/processed/video_game_sales/video_game_sales_publishers_1980_2017.csv`
+- Sortie paysage: `data/processed/video_game_sales/video_game_sales_publishers_race_1980_2017_3min.mp4`
+- Miniature: `data/processed/video_game_sales/video_game_sales_publishers_thumbnail_1980_2017.png`
+
+Caracteristiques:
+
+- Classement cumule des ventes globales de jeux video par publisher.
+- Valeurs en millions d'unites vendues, pas en pourcentage.
+- Donnees issues du dataset Kaggle Video Game Sales, limitees par la couverture du dataset jusqu'a 2017.
+- Logos publishers locaux dans `data/raw/video_game_sales/logos/` si disponibles.
+
+Commandes:
+
+- `python scraper/build_video_game_sales_publishers_timeseries_csv.py`
+- `python video_generator/generate_video_game_sales_publishers_race_moviepy.py`
+- `python video_generator/games/generate_video_game_sales_publishers_thumbnail.py`
+
+## US Boy Names Race
+
+Fichiers principaux:
+
+- Generateur paysage: `video_generator/demography/generate_usa_male_names_race_moviepy.py`
+- Miniature: `video_generator/demography/generate_usa_male_names_thumbnail.py`
+- CSV source: `data/processed/demography/usa_male_names_top20_by_year_1880_2024.csv`
+- CSV normalise: `data/processed/demography/usa_male_names/usa_male_names_1880_2025.csv`
+- Sortie paysage: `data/processed/demography/usa_male_names/usa_male_names_race_1880_2025_3min.mp4`
+- Miniature: `data/processed/demography/usa_male_names/usa_male_names_thumbnail_1880_2025.png`
+
+Caracteristiques:
+
+- Format paysage `1920x1080`, duree par defaut `180s`, `60 fps`, top 12.
+- Prenoms masculins les plus populaires aux Etats-Unis, valeurs en naissances annuelles.
+- Le fichier source porte `1880_2024` dans son nom mais contient des lignes jusqu'a 2025.
+
+Commandes:
+
+- `python video_generator/demography/generate_usa_male_names_race_moviepy.py`
+- `python video_generator/demography/generate_usa_male_names_thumbnail.py`
+
+## UN Population Projection Race
+
+Fichiers principaux:
+
+- Generateur: `video_generator/demography/generate_un_population_projection_race_moviepy.py`
+- CSV source: `data/processed/demography/population-with-un-projections.csv`
+- CSV normalise: `data/processed/demography/un_population_projection/un_population_projection_2026_2100.csv`
+- Sortie: `data/processed/demography/un_population_projection/un_population_projection_race_2026_2100_3min.mp4`
+
+Caracteristiques:
+
+- Format paysage `1920x1080`, duree par defaut `180s`, `60 fps`, top 12.
+- La video demarre en 2026 et utilise uniquement la colonne `Population (Projected)`.
+- Les agregats OWID/continents sont exclus; seuls les pays avec code ISO3 sont conserves.
+- Drapeaux locaux utilises via `data/raw/flags/`.
+
+Commande:
+
+- `python video_generator/demography/generate_un_population_projection_race_moviepy.py`
+
 ## Template Ronaldo Messi Goals By Age Race Shorts
 
 Fichiers principaux:

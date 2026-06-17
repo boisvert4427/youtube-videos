@@ -443,6 +443,66 @@ Caractere du template:
 - Afficher les pourcentages au dixieme de point.
 - Garder la date centree, les graduations derriere les barres et la barre montante au premier plan.
 
+## Social Media Market Share Race
+
+- Builder canonique: `scraper/technology/build_social_media_market_share_timeseries_csv.py`
+- Generateur canonique: `video_generator/technology/generate_social_media_market_share_race_moviepy.py`
+- CSV par defaut: `data/processed/technology/social_media_market_share/social_media_market_share_2009_2026.csv`
+- Sortie par defaut: `data/processed/technology/social_media_market_share/social_media_market_share_race_2009_2026_top10_3min.mp4`
+- Format paysage `1920x1080`, duree `180s`, `60 fps`.
+- Source: StatCounter Social Media Stats, parts de trafic / parts de marche, pas nombre d'utilisateurs.
+
+### Points Sensibles
+
+- Ne pas presenter ces donnees comme des utilisateurs actifs.
+- Exclure `Other` de la video pour eviter une barre peu informative.
+- Verifier le top 10 paysage: les entrants doivent rester dans la zone visible.
+- Garder les logos/favicons stables dans `data/raw/technology/social_media_market_share/logos/`.
+
+## Video Game Sales Publishers Race
+
+- Builder canonique: `scraper/games/build_video_game_sales_publishers_timeseries_csv.py`
+- Wrapper builder: `scraper/build_video_game_sales_publishers_timeseries_csv.py`
+- Generateur paysage: `video_generator/games/generate_video_game_sales_publishers_race_moviepy.py`
+- Generateur Shorts: `video_generator/games/generate_video_game_sales_publishers_race_shorts_moviepy.py`
+- Miniature: `video_generator/games/generate_video_game_sales_publishers_thumbnail.py`
+- CSV par defaut: `data/processed/video_game_sales/video_game_sales_publishers_1980_2017.csv`
+
+### Points Sensibles
+
+- Les valeurs sont des ventes cumulees en millions d'unites, pas des pourcentages.
+- Le dataset s'arrete a 2017; ne pas etendre artificiellement sans nouvelle source.
+- Verifier que les logos Electronic Arts et Konami restent lisibles si les assets changent.
+
+## US Boy Names Race
+
+- Generateur paysage: `video_generator/demography/generate_usa_male_names_race_moviepy.py`
+- Miniature: `video_generator/demography/generate_usa_male_names_thumbnail.py`
+- CSV source: `data/processed/demography/usa_male_names_top20_by_year_1880_2024.csv`
+- CSV normalise: `data/processed/demography/usa_male_names/usa_male_names_1880_2025.csv`
+- Sortie par defaut: `data/processed/demography/usa_male_names/usa_male_names_race_1880_2025_3min.mp4`
+
+### Points Sensibles
+
+- Le nom du CSV source indique `2024`, mais les donnees lues vont jusqu'a 2025.
+- Les valeurs sont des naissances annuelles, pas un cumul.
+- Le wrapper patch les libelles du moteur France first names en anglais; ne pas casser ces overrides.
+
+## UN Population Projection Race
+
+- Generateur canonique: `video_generator/demography/generate_un_population_projection_race_moviepy.py`
+- CSV source: `data/processed/demography/population-with-un-projections.csv`
+- CSV normalise: `data/processed/demography/un_population_projection/un_population_projection_2026_2100.csv`
+- Sortie par defaut: `data/processed/demography/un_population_projection/un_population_projection_race_2026_2100_3min.mp4`
+- Format paysage `1920x1080`, duree `180s`, `60 fps`, top 12.
+
+### Points Sensibles
+
+- Demarrer a `2026` pour raconter uniquement les projections futures.
+- Utiliser la colonne `Population (Projected)` pour cette video; ne pas melanger avec l'historique 1950-2025.
+- Exclure les agregats OWID/continents et garder seulement les pays avec code ISO3.
+- Verifier les drapeaux des pays entrants tardifs, notamment `CD` pour DR Congo.
+
 ## Snapshots et frames YouTube
 
 - Script canonique: `video_tools/extract_youtube_short_snapshots.py`
