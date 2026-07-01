@@ -54,6 +54,10 @@ FINAL_HOLD_DURATION = 15.0
 
 TITLE = "TOUR DE FRANCE STAGE WINS"
 SUBTITLE = "Cumulative victories since 1947"
+INTRO_SUMMARY = "Post-war race|Cumulative stage wins|Since 1947"
+YEAR_BOX_RECT = (1518, 50, 1848, 154)
+SUMMARY_BOX_RECT = (830, 54, 1448, 150)
+INFO_BOX_RECT = None
 
 ALPHA3_TO_ALPHA2 = {
     "ARG": "ar",
@@ -455,6 +459,8 @@ def render_video(
     final_hold_duration: float,
     fps: int,
     top_n: int,
+    preview_path: Path | None = None,
+    preview_time: float = 120.0,
 ) -> Path:
     snapshots = load_snapshots(input_csv)
     if len(snapshots) < 2:
@@ -464,7 +470,7 @@ def render_video(
     intro_snapshot = Snapshot(
         ranking_date=f"{first_snapshot.year - 1}-12-31",
         year=first_snapshot.year,
-        season_summary="Post-war race|Cumulative stage wins|Since 1947",
+        season_summary=INTRO_SUMMARY,
         states=[],
     )
     snapshots = [intro_snapshot, *snapshots]
@@ -526,32 +532,15 @@ def render_video(
         visible_names = sorted(set(prev_rank) | set(next_rank))
         top_states = [interp_map[name] for name in visible_names if name in interp_map]
         max_titles = max(1, int(math.ceil(axis_cap)))
+        tick_step = 1 if max_titles <= 20 else 5 if max_titles <= 50 else 10
 
         draw.text((72, 54), TITLE, font=title_font, fill="#f4f7fb")
         draw.text((74, 116), SUBTITLE, font=subtitle_font, fill="#bfd8ec")
 
-        ranking_bottom = base_y + top_n * row_h + (top_n - 1) * row_gap
-        ranking_center_y = (base_y + ranking_bottom) // 2
-        header_height = 392
-        header_top = ranking_center_y - header_height // 2 + 102
-        header_box = (1194, header_top, WIDTH - 54, header_top + header_height)
-
-        for tick in range(1, max_titles + 1):
+        for tick in range(tick_step, max_titles + 1, tick_step):
             x = bar_left + int((tick / axis_cap) * bar_max_w)
             draw.line((x, base_y - 30, x, HEIGHT - 92), fill=(0, 0, 0, 58), width=2)
             draw.text((x - 6, base_y - 60), str(tick), font=tick_font, fill=(0, 0, 0, 104))
-
-        draw.rounded_rectangle(header_box, radius=28, fill=(8, 20, 38, 236), outline=(246, 208, 91, 82), width=2)
-
-        year_badge_width = 228
-        year_badge_left = header_box[0] + (header_box[2] - header_box[0] - year_badge_width) // 2
-        year_badge = (year_badge_left, header_box[1] + 20, year_badge_left + year_badge_width, header_box[1] + 116)
-        draw.rounded_rectangle(year_badge, radius=28, fill=(246, 208, 91, 255))
-        year_text = str(nxt.year)
-        year_bbox = draw.textbbox((0, 0), year_text, font=year_font)
-        year_x = (year_badge[0] + year_badge[2] - (year_bbox[2] - year_bbox[0])) // 2 - year_bbox[0]
-        year_y = (year_badge[1] + year_badge[3] - (year_bbox[3] - year_bbox[1])) // 2 - year_bbox[1]
-        draw.text((year_x, year_y), year_text, font=year_font, fill="#10233f")
 
         summary_lines = _parse_season_summary(nxt.season_summary)
         summary_key = "\n".join(summary_lines)
@@ -561,18 +550,72 @@ def render_video(
             summary_font = _fit_font_size(draw, longest, 620, 28, 17, bold=True)
             summary_font_cache[summary_key] = summary_font
 
-        summary_rect = (header_box[0] + 18, header_box[1] + 140, header_box[2] - 18, header_box[3] - 24)
-        draw.rounded_rectangle(summary_rect, radius=22, fill=(14, 42, 77, 220), outline=(180, 255, 120, 42), width=2)
-        line_gap = 8
-        line_height = max(18, int(summary_font.size * 0.92))
-        total_summary_h = len(summary_lines) * line_height + max(0, len(summary_lines) - 1) * line_gap
-        line_y = summary_rect[1] + max(8, ((summary_rect[3] - summary_rect[1]) - total_summary_h) // 2 - 1)
-        for line in summary_lines:
-            fitted = _truncate_text_to_width(draw, line, summary_font, summary_rect[2] - summary_rect[0] - 36)
-            line_bbox = draw.textbbox((0, 0), fitted, font=summary_font)
-            line_x = summary_rect[0] + (summary_rect[2] - summary_rect[0] - (line_bbox[2] - line_bbox[0])) // 2
-            draw.text((line_x, line_y), fitted, font=summary_font, fill="#eef7ff")
-            line_y += line_height + line_gap
+        if INFO_BOX_RECT is None:
+            ranking_bottom = base_y + top_n * row_h + (top_n - 1) * row_gap
+            ranking_center_y = (base_y + ranking_bottom) // 2
+            info_box = (1254, ranking_center_y + 76, WIDTH - 54, ranking_center_y + 340)
+            draw.rounded_rectangle(info_box, radius=28, fill=(8, 20, 38, 236), outline=(246, 208, 91, 82), width=2)
+
+            year_text = str(nxt.year)
+            year_font_small = _fit_font_size(draw, year_text, info_box[2] - info_box[0] - 80, 72, 52, bold=True)
+            year_bbox = draw.textbbox((0, 0), year_text, font=year_font_small)
+            year_x = info_box[0] + ((info_box[2] - info_box[0]) - (year_bbox[2] - year_bbox[0])) // 2 - year_bbox[0]
+            year_y = info_box[1] + 18 - year_bbox[1]
+            draw.text((year_x, year_y), year_text, font=year_font_small, fill="#f6d365")
+
+            separator_y = year_y + (year_bbox[3] - year_bbox[1]) + 18
+            draw.line((info_box[0] + 34, separator_y, info_box[2] - 34, separator_y), fill=(246, 208, 91, 64), width=2)
+
+            summary_lines_block = summary_lines[:3]
+            summary_font_block = _fit_font_size(
+                draw,
+                max(summary_lines_block, key=len) if summary_lines_block else "",
+                info_box[2] - info_box[0] - 84,
+                26,
+                18,
+                bold=True,
+            )
+            line_gap = 7
+            line_height = max(18, int(summary_font_block.size * 0.95))
+            total_summary_h = len(summary_lines_block) * line_height + max(0, len(summary_lines_block) - 1) * line_gap
+            line_y = separator_y + 18
+            max_start = info_box[3] - 20 - total_summary_h
+            line_y = min(line_y, max_start)
+            for line in summary_lines_block:
+                fitted = _truncate_text_to_width(draw, line, summary_font_block, info_box[2] - info_box[0] - 84)
+                line_bbox = draw.textbbox((0, 0), fitted, font=summary_font_block)
+                line_x = info_box[0] + ((info_box[2] - info_box[0]) - (line_bbox[2] - line_bbox[0])) // 2 - line_bbox[0]
+                draw.text((line_x, line_y), fitted, font=summary_font_block, fill="#eef7ff")
+                line_y += line_height + line_gap
+        else:
+            info_rect = INFO_BOX_RECT
+            draw.rounded_rectangle(info_rect, radius=22, fill=(8, 20, 38, 230), outline=(246, 208, 91, 84), width=2)
+            pad_x = 28
+            pad_y = 18
+            year_text = str(nxt.year)
+            year_font_small = _fit_font_size(draw, year_text, 220, 64, 42, bold=True)
+            year_bbox = draw.textbbox((0, 0), year_text, font=year_font_small)
+            year_w = year_bbox[2] - year_bbox[0]
+            year_h = year_bbox[3] - year_bbox[1]
+            year_x = info_rect[0] + ((info_rect[2] - info_rect[0]) - year_w) // 2 - year_bbox[0]
+            year_y = info_rect[1] + pad_y - year_bbox[1]
+            draw.text((year_x, year_y), year_text, font=year_font_small, fill="#f6d365")
+
+            summary_lines_small = summary_lines[:3]
+            summary_font_small = _fit_font_size(draw, max(summary_lines_small, key=len) if summary_lines_small else "", 430, 28, 18, bold=True)
+            line_gap = 6
+            line_height = max(18, int(summary_font_small.size * 0.95))
+            total_summary_h = len(summary_lines_small) * line_height + max(0, len(summary_lines_small) - 1) * line_gap
+            start_y = year_y + year_h + 12
+            max_start = info_rect[3] - pad_y - total_summary_h
+            start_y = min(start_y, max_start)
+            start_y = max(start_y, info_rect[1] + year_h + 18)
+            for line in summary_lines_small:
+                fitted = _truncate_text_to_width(draw, line, summary_font_small, info_rect[2] - info_rect[0] - pad_x * 2)
+                line_bbox = draw.textbbox((0, 0), fitted, font=summary_font_small)
+                line_x = info_rect[0] + pad_x + ((info_rect[2] - info_rect[0] - pad_x * 2) - (line_bbox[2] - line_bbox[0])) // 2
+                draw.text((line_x, start_y), fitted, font=summary_font_small, fill="#eef7ff")
+                start_y += line_height + line_gap
 
         for rank_idx in range(top_n):
             y0 = base_y + rank_idx * (row_h + row_gap)
@@ -666,6 +709,12 @@ def render_video(
 
         return np.array(frame.convert("RGB"))
 
+    if preview_path is not None:
+        preview_path.parent.mkdir(parents=True, exist_ok=True)
+        preview_frame = Image.fromarray(make_frame(preview_time), mode="RGB")
+        preview_frame.save(preview_path)
+        return preview_path
+
     clip = VideoClip(make_frame, duration=duration)
 
     audio_clip = None
@@ -702,6 +751,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate a landscape Tour de France stage wins race video.")
     parser.add_argument("--input", type=Path, default=DEFAULT_INPUT)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
+    parser.add_argument("--preview", type=Path, default=None)
+    parser.add_argument("--preview-time", type=float, default=120.0)
     parser.add_argument("--flags-dir", type=Path, default=DEFAULT_FLAGS_DIR)
     parser.add_argument("--photos-dir", type=Path, default=DEFAULT_PHOTOS_DIR)
     parser.add_argument("--audio", type=Path, default=DEFAULT_AUDIO)
@@ -724,8 +775,13 @@ def main() -> None:
         final_hold_duration=args.final_hold,
         fps=args.fps,
         top_n=args.top_n,
+        preview_path=args.preview,
+        preview_time=args.preview_time,
     )
-    print(f"[video_generator] Tour de France stage wins landscape race generated -> {output}")
+    if args.preview is not None:
+        print(f"[video_generator] Tour de France stage wins preview generated -> {output}")
+    else:
+        print(f"[video_generator] Tour de France stage wins landscape race generated -> {output}")
 
 
 if __name__ == "__main__":

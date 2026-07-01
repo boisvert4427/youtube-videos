@@ -121,11 +121,14 @@ du template NBA bracket 2025.
 - Wrapper: `video_generator/generate_tour_de_france_stage_wins_race_moviepy.py`
 - CSV par defaut: `data/processed/cycling/tour_de_france/tour_de_france_stage_wins_postwar_1947_2025.csv`
 - Sortie par defaut: `data/processed/cycling/tour_de_france/tour_de_france_stage_wins_postwar_1947_2025.mp4`
+- Preview rapide: `python video_generator/cycling/generate_tour_de_france_stage_wins_race_moviepy.py --preview --preview-time 120`
+- Preview PNG: `data/processed/cycling/tour_de_france/tour_de_france_stage_wins_preview.png`
 - Format paysage `1920x1080`, duree par defaut `240s`, `30 fps`
 - Contenu: victoires d'etape cumulees du Tour de France depuis 1947
 - Les prologues et les contre-la-montre individuels sont comptes, mais les team time trials sont exclus.
 - Source de donnees: pages annuelles du Tour de France sur Wikipedia, avec validation sur la page des records du Tour.
 - Les portraits et drapeaux locaux sont utilises si disponibles dans `data/raw/player_photos/` et `data/raw/flags/`.
+- Faire d'abord une preview avant le rendu final pour verifier le panneau de droite et le placement de l'annee.
 
 ### Points Sensibles
 

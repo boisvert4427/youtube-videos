@@ -54,6 +54,7 @@ SUBTITLE = "TOP 12 COUNTRIES | 1960-2024"
 LEFT_HEADER_LABEL = "COUNTRY"
 RIGHT_HEADER_LABEL = "POPULATION"
 FOOTER = "SOURCE: WORLD BANK | INDICATOR SP.POP.TOTL"
+SNAP_TO_CURRENT_RANKS = False
 
 
 def YEAR_LABEL(snapshot: Snapshot) -> str:
@@ -205,7 +206,7 @@ def _truncate(
 
 
 def _format_population(value: float) -> str:
-    return f"{value / 1_000_000:,.1f}M"
+    return f"{value / 1_000_000:,.2f}M"
 
 
 def _nice_number(value: float) -> float:
@@ -478,7 +479,16 @@ def render_video(
         priority = priorities[period_index]
         previous_rank = _rank(prev.states, top_n, priority)
         target_rank = _rank(nxt.states, top_n, priority)
-        visible_iso3 = sorted(set(previous_rank) | set(target_rank))
+        if SNAP_TO_CURRENT_RANKS:
+            current_ranked = sorted(
+                (state for state in interpolated if state.population > 0),
+                key=lambda state: (-state.population, priority.get(state.country_iso3, 10_000), state.country_name),
+            )[:top_n]
+            visible_iso3 = [state.country_iso3 for state in current_ranked]
+            current_rank = {state.country_iso3: index for index, state in enumerate(current_ranked)}
+        else:
+            visible_iso3 = sorted(set(previous_rank) | set(target_rank))
+            current_rank = {}
 
         draw.rounded_rectangle(header_box, radius=34, fill=(3, 16, 30, 218), outline=(255, 255, 255, 24), width=2)
         draw.text((68, 55), TITLE, font=title_font, fill="#f5f8fb")
@@ -528,8 +538,16 @@ def render_video(
                 continue
             previous_index = previous_rank.get(iso3, top_n + 1)
             target_index = target_rank.get(iso3, top_n + 1)
+            if SNAP_TO_CURRENT_RANKS:
+                y_index = float(current_rank[iso3])
+                bar_width = max(8, int((state.population / axis_cap) * bar_max_width))
+                render_items.append((0, base_y + y_index * pitch, state, bar_width))
+                continue
             entering = previous_index > top_n and target_index <= top_n
-            effective_previous = float(top_n + 1.8) if entering else float(previous_index)
+            # Keep entrants just below the visible area in dense top-12 races;
+            # starting too low clips rows during the first seconds.
+            entry_index = float(top_n - 0.15) if top_n >= 12 else float(top_n + 1.8)
+            effective_previous = entry_index if entering else float(previous_index)
             movement_alpha = rank_alpha
             places_moved = abs(float(target_index) - effective_previous)
             if places_moved > 0:

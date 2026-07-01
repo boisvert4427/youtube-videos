@@ -365,6 +365,8 @@ Fichiers principaux:
 - CSV: `data/processed/cycling/tour_de_france/tour_de_france_stage_wins_postwar_1947_2025.csv`
 - Builder CSV: `python scraper/cycling/build_tour_de_france_postwar_stage_wins_csv.py`
 - Video finale: `python video_generator/cycling/generate_tour_de_france_stage_wins_race_moviepy.py`
+- Preview rapide: `python video_generator/cycling/generate_tour_de_france_stage_wins_race_moviepy.py --preview --preview-time 120`
+- Preview PNG: `data/processed/cycling/tour_de_france/tour_de_france_stage_wins_preview.png`
 
 Compatibilite:
 
@@ -377,6 +379,7 @@ Comment est faite la video:
 - Les prologues et les contre-la-montre individuels sont comptes comme des victoires d'etape.
 - Le panneau de droite affiche les leaders de chaque edition annuelle.
 - Les portraits et drapeaux locaux sont utilises si disponibles dans `data/raw/player_photos/` et `data/raw/flags/`.
+- Le rendu accepte un mode preview pour verifier rapidement le placement du panneau de droite avant la video finale.
 
 Source de donnees:
 
