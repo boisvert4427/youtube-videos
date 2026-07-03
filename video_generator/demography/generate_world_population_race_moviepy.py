@@ -55,6 +55,7 @@ LEFT_HEADER_LABEL = "COUNTRY"
 RIGHT_HEADER_LABEL = "POPULATION"
 FOOTER = "SOURCE: WORLD BANK | INDICATOR SP.POP.TOTL"
 SNAP_TO_CURRENT_RANKS = False
+SHOW_INSIGHT_BOX = True
 
 
 def YEAR_LABEL(snapshot: Snapshot) -> str:
@@ -494,20 +495,21 @@ def render_video(
         draw.text((68, 55), TITLE, font=title_font, fill="#f5f8fb")
         draw.text((70, 119), SUBTITLE, font=subtitle_font, fill="#83d9d0")
 
-        draw.rounded_rectangle(insight_box, radius=26, fill=(9, 43, 58, 230), outline=(102, 224, 210, 54), width=2)
-        insight_lines = [part.strip() for part in nxt.season_summary.split("|") if part.strip()][:2]
-        for line_index, line in enumerate(insight_lines):
-            font = insight_fonts.get(line)
-            if font is None:
-                font = _fit_font_size(draw, line, insight_box[2] - insight_box[0] - 40, 24, 17, bold=True)
-                insight_fonts[line] = font
-            line_rect = (
-                insight_box[0] + 18,
-                insight_box[1] + 8 + line_index * 41,
-                insight_box[2] - 18,
-                insight_box[1] + 48 + line_index * 41,
-            )
-            _center_text(draw, line_rect, line, font, "#f4d39a" if line_index == 0 else "#eaf7f5")
+        if SHOW_INSIGHT_BOX:
+            draw.rounded_rectangle(insight_box, radius=26, fill=(9, 43, 58, 230), outline=(102, 224, 210, 54), width=2)
+            insight_lines = [part.strip() for part in nxt.season_summary.split("|") if part.strip()][:2]
+            for line_index, line in enumerate(insight_lines):
+                font = insight_fonts.get(line)
+                if font is None:
+                    font = _fit_font_size(draw, line, insight_box[2] - insight_box[0] - 40, 24, 17, bold=True)
+                    insight_fonts[line] = font
+                line_rect = (
+                    insight_box[0] + 18,
+                    insight_box[1] + 8 + line_index * 41,
+                    insight_box[2] - 18,
+                    insight_box[1] + 48 + line_index * 41,
+                )
+                _center_text(draw, line_rect, line, font, "#f4d39a" if line_index == 0 else "#eaf7f5")
 
         draw.rounded_rectangle(year_box, radius=30, fill=(244, 194, 107, 255), outline=(255, 235, 184, 180), width=2)
         _center_text(draw, year_box, YEAR_LABEL(nxt), year_font, "#10273a")

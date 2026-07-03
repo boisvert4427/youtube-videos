@@ -56,12 +56,12 @@ def _label_from_source(source: str) -> str:
 
 
 def _yt_dlp_prefix() -> list[str]:
+    if importlib.util.find_spec("yt_dlp") is not None:
+        return [sys.executable, "-m", "yt_dlp"]
+
     executable = shutil.which("yt-dlp")
     if executable:
         return [executable]
-
-    if importlib.util.find_spec("yt_dlp") is not None:
-        return [sys.executable, "-m", "yt_dlp"]
 
     raise RuntimeError(
         "yt-dlp est requis pour telecharger une URL YouTube. "
