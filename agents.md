@@ -151,6 +151,28 @@ du template NBA bracket 2025.
 - Les graduations doivent passer derriere les barres.
 - Lors d'un changement de rang, la barre qui monte doit passer visiblement au-dessus.
 
+## Tour de France Through The Years Landscape
+
+- Builder CSV: `scraper/cycling/build_tour_de_france_through_the_years_csv.py`
+- Wrapper CSV: `scraper/build_tour_de_france_through_the_years_csv.py`
+- Script canonique: `video_generator/cycling/generate_tour_de_france_through_the_years_moviepy.py`
+- Wrapper: `video_generator/generate_tour_de_france_through_the_years_moviepy.py`
+- Schema: `schemas/cycling/tour_de_france_through_the_years_v1.csv.md`
+- CSV par defaut: `data/processed/cycling/tour_de_france/tour_de_france_through_the_years_1947_2025.csv`
+- Preview PNG: `data/processed/cycling/tour_de_france/tour_de_france_through_the_years_preview.png`
+- Sortie par defaut: `data/processed/cycling/tour_de_france/tour_de_france_through_the_years_1947_2025_4min_60fps.mp4`
+- Format paysage `1920x1080`, duree par defaut `240s`, `60 fps`
+- Contenu: timeline cartes annee par annee depuis 1947, avec vainqueur, podium et maillots.
+- Assets maillots obligatoires: `data/raw/cycling/tour_de_france_jerseys/yellow.png`, `green.png`, `polka.png`.
+
+### Points Sensibles
+
+- Les maillots en bas des cartes doivent utiliser les PNG detoures fournis par l'utilisateur, pas une recreation vectorielle.
+- Ne pas remettre de filtre jaune plein sur les photos; garder les portraits lisibles avec seulement le fade sombre bas.
+- Valider la preview PNG avant tout rendu final long.
+- Les noms sous les maillots doivent rester visibles; si les maillots sont agrandis, ajuster aussi la position du texte.
+- Les assets locaux `data/raw/` et les rendus `data/processed/` sont ignores par git; documenter leur presence si le rendu en depend.
+
 ## Federer vs Nadal H2H Score Timeline Shorts
 
 - Script canonique: `video_generator/tennis/generate_federer_vs_nadal_h2h_scores_shorts_moviepy.py`

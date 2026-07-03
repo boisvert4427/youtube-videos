@@ -114,6 +114,12 @@ Commandes:
    - Montage sequence 5 -> 1, avec un ecran par rang.
    - Layout 1/3 carte en haut, 2/3 video en bas, sur toute la largeur.
    - La video de match est active uniquement sur Nadal; les autres ecrans gardent le bas noir.
+28. Generer la timeline paysage Tour de France through the years:
+   - CSV: `python scraper/build_tour_de_france_through_the_years_csv.py`
+   - Preview PNG: `python video_generator/generate_tour_de_france_through_the_years_moviepy.py --preview data/processed/cycling/tour_de_france/tour_de_france_through_the_years_preview.png`
+   - Final: `python video_generator/generate_tour_de_france_through_the_years_moviepy.py`
+   - Sortie par defaut: `data/processed/cycling/tour_de_france/tour_de_france_through_the_years_1947_2025_4min_60fps.mp4`
+   - Assets maillots: `data/raw/cycling/tour_de_france_jerseys/yellow.png`, `green.png`, `polka.png`
 
 ## Snapshots et frames YouTube
 
