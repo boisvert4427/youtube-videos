@@ -917,6 +917,30 @@ Commandes:
 - `python scraper/technology/build_social_media_market_share_timeseries_csv.py --refresh`
 - `python video_generator/technology/generate_social_media_market_share_race_moviepy.py`
 
+## Oil Consumption Race
+
+Fichiers principaux:
+
+- Generateur: `video_generator/technology/generate_oil_consumption_race_moviepy.py`
+- Wrapper: `video_generator/generate_oil_consumption_race_moviepy.py`
+- CSV source: `C:\Users\leona\Downloads\oil-consumption-by-country.csv`
+- Background: `C:\Users\leona\Downloads\ChatGPT Image 5 juil. 2026, 20_51_42.png`
+- Sortie: `data/processed/technology/oil_consumption/oil_consumption_race_1965_2024_2min.mp4`
+- Miniature: `data/processed/technology/oil_consumption/oil_consumption_thumbnail_1280x720.png`
+
+Caracteristiques:
+
+- Format paysage `1920x1080`, duree finale `120s`, `60 fps`, top 12.
+- Donnees OWID oil consumption, valeurs en milliers de barils par jour.
+- Les agregats OWID/continents sont exclus; seuls les pays ISO3 sont conserves.
+- Les noms des pays sont dans les barres avec drapeaux de taille fixe.
+- L'axe est cale sur le leader avec une marge de `4%` pour garder les valeurs visibles apres la plus grande barre.
+- Les depassements restent animes avec interpolation des rangs; ne pas repasser en `SNAP_TO_CURRENT_RANKS=True` sauf preview de debug.
+
+Commandes:
+
+- `python video_generator/generate_oil_consumption_race_moviepy.py --duration 120 --final-hold 6 --fps 60`
+
 ## Video Game Sales Publishers Race
 
 Fichiers principaux:

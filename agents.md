@@ -484,6 +484,27 @@ Caractere du template:
 - Verifier le top 10 paysage: les entrants doivent rester dans la zone visible.
 - Garder les logos/favicons stables dans `data/raw/technology/social_media_market_share/logos/`.
 
+## Oil Consumption Race
+
+- Generateur canonique: `video_generator/technology/generate_oil_consumption_race_moviepy.py`
+- Wrapper: `video_generator/generate_oil_consumption_race_moviepy.py`
+- CSV source par defaut: `C:\Users\leona\Downloads\oil-consumption-by-country.csv`
+- Background par defaut: `C:\Users\leona\Downloads\ChatGPT Image 5 juil. 2026, 20_51_42.png`
+- Sortie par defaut: `data/processed/technology/oil_consumption/oil_consumption_race_1965_2024_3min_uhd.mp4`
+- Sortie finale utilisee: `data/processed/technology/oil_consumption/oil_consumption_race_1965_2024_2min.mp4`
+- Miniature: `data/processed/technology/oil_consumption/oil_consumption_thumbnail_1280x720.png`
+- Format paysage `1920x1080`, rendu final `120s`, `60 fps`, top 12.
+- Unite: milliers de barils par jour.
+
+### Points Sensibles
+
+- Exclure tous les agregats OWID/continents; garder uniquement les pays ISO3.
+- Garder les noms de pays dans les barres, avec drapeaux de taille fixe.
+- Ne pas afficher une colonne `COUNTRY` separee quand `NAME_IN_BAR=True`.
+- Garder une marge de `4%` apres le leader pour laisser respirer la valeur numerique.
+- Conserver l'effet de depassement: `SNAP_TO_CURRENT_RANKS=False` pour le rendu final.
+- `SNAP_TO_CURRENT_RANKS=True` supprime l'animation de croisement et ne doit servir qu'a diagnostiquer les entrants/sortants.
+
 ## Video Game Sales Publishers Race
 
 - Builder canonique: `scraper/games/build_video_game_sales_publishers_timeseries_csv.py`

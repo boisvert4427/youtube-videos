@@ -56,6 +56,8 @@ RIGHT_HEADER_LABEL = "POPULATION"
 FOOTER = "SOURCE: WORLD BANK | INDICATOR SP.POP.TOTL"
 SNAP_TO_CURRENT_RANKS = False
 SHOW_INSIGHT_BOX = True
+SHOW_ROW_BACKPLATE = True
+NAME_IN_BAR = False
 
 
 def YEAR_LABEL(snapshot: Snapshot) -> str:
@@ -409,10 +411,13 @@ def render_video(
     periods = len(snapshots) - 1
     transition_duration = max(0.1, duration - max(0.0, final_hold_duration))
     seconds_per_period = transition_duration / periods
-    axis_scales = [
-        _axis_scale(max((state.population for state in snapshot.states[:top_n]), default=1.0))
-        for snapshot in snapshots
-    ]
+    axis_scales = []
+    for snapshot in snapshots:
+        maximum = max((state.population for state in snapshot.states[:top_n]), default=1.0)
+        if NAME_IN_BAR:
+            axis_scales.append((maximum * 1.04, _nice_number(maximum / 5.0)))
+        else:
+            axis_scales.append(_axis_scale(maximum))
     axis_scales[0] = axis_scales[1]
 
     background = _make_background()
@@ -432,14 +437,16 @@ def render_video(
     header_box = (38, 34, WIDTH - 38, 170)
     insight_box = (830, 54, 1448, 150)
     year_box = (1518, 50, 1848, 154)
+    if NAME_IN_BAR:
+        year_box = (1490, 828, 1820, 932)
 
     rank_left = 48
     flag_left = 118
     name_left = 182
-    bar_left = 430
-    bar_right = 1762
+    bar_left = 120 if NAME_IN_BAR else 430
+    bar_right = 1818 if NAME_IN_BAR else 1762
     bar_max_width = bar_right - bar_left
-    name_max_width = bar_left - name_left - 12
+    name_max_width = 360 if NAME_IN_BAR else bar_left - name_left - 12
     base_y = 246
     pitch = 64
     row_height = 48
@@ -511,11 +518,9 @@ def render_video(
                 )
                 _center_text(draw, line_rect, line, font, "#f4d39a" if line_index == 0 else "#eaf7f5")
 
-        draw.rounded_rectangle(year_box, radius=30, fill=(244, 194, 107, 255), outline=(255, 235, 184, 180), width=2)
-        _center_text(draw, year_box, YEAR_LABEL(nxt), year_font, "#10273a")
-
-        draw.text((name_left, 195), LEFT_HEADER_LABEL, font=label_font, fill=(177, 210, 219, 205))
-        draw.text((bar_left + 18, 195), RIGHT_HEADER_LABEL, font=label_font, fill=(177, 210, 219, 205))
+        if LEFT_HEADER_LABEL and not NAME_IN_BAR:
+            draw.text((name_left, 195), LEFT_HEADER_LABEL, font=label_font, fill=(177, 210, 219, 205))
+        draw.text((bar_left + 18, 195), RIGHT_HEADER_LABEL, font=label_font, fill=(196, 225, 230, 220))
 
         tick_count = max(1, int(math.floor(axis_cap / max(tick_step, 1.0))))
         for tick_index in range(tick_count + 1):
@@ -523,8 +528,17 @@ def render_video(
             x = bar_left + int((value / axis_cap) * bar_max_width)
             draw.line((x, 224, x, ranking_bottom + 12), fill=(1, 9, 18, 82), width=2 if tick_index else 3)
             tick_text = _format_population(value) if tick_index else "0"
-            bbox = draw.textbbox((0, 0), tick_text, font=tick_font)
-            draw.text((x - (bbox[2] - bbox[0]) // 2, 194), tick_text, font=tick_font, fill=(3, 15, 27, 165))
+            if not (NAME_IN_BAR and tick_index == 0):
+                bbox = draw.textbbox((0, 0), tick_text, font=tick_font)
+                draw.text(
+                    (x - (bbox[2] - bbox[0]) // 2, 194),
+                    tick_text,
+                    font=tick_font,
+                    fill=(196, 225, 230, 190) if NAME_IN_BAR else (3, 15, 27, 165),
+                )
+
+        draw.rounded_rectangle(year_box, radius=30, fill=(244, 194, 107, 255), outline=(255, 235, 184, 180), width=2)
+        _center_text(draw, year_box, YEAR_LABEL(nxt), year_font, "#10273a")
 
         for rank_index in range(top_n):
             y0 = base_y + rank_index * pitch
@@ -546,20 +560,37 @@ def render_video(
                 render_items.append((0, base_y + y_index * pitch, state, bar_width))
                 continue
             entering = previous_index > top_n and target_index <= top_n
-            # Keep entrants just below the visible area in dense top-12 races;
-            # starting too low clips rows during the first seconds.
-            entry_index = float(top_n - 0.15) if top_n >= 12 else float(top_n + 1.8)
+            exiting = previous_index <= top_n and target_index > top_n
+            entering_iso3 = sorted(
+                (code for code, rank in target_rank.items() if rank <= top_n and previous_rank.get(code, top_n + 1) > top_n),
+                key=lambda code: target_rank[code],
+            )
+            exiting_iso3 = sorted(
+                (code for code, rank in previous_rank.items() if rank <= top_n and target_rank.get(code, top_n + 1) > top_n),
+                key=lambda code: previous_rank[code],
+            )
+            entry_lane = entering_iso3.index(iso3) if entering and iso3 in entering_iso3 else 0
+            exit_lane = exiting_iso3.index(iso3) if exiting and iso3 in exiting_iso3 else 0
+            entry_index = float(top_n + 1.55 + entry_lane * 0.7)
+            exit_index = float(top_n + 1.55 + exit_lane * 0.7)
             effective_previous = entry_index if entering else float(previous_index)
+            effective_target = exit_index if exiting else float(target_index)
             movement_alpha = rank_alpha
-            places_moved = abs(float(target_index) - effective_previous)
+            places_moved = abs(effective_target - effective_previous)
             if places_moved > 0:
                 delay = min(0.08, max(0.0, (places_moved - 1.0) * 0.015))
                 movement_alpha = _ease_in_out(
                     _phase_delay(movement_alpha, delay, max(0.82, 0.98 - delay))
                 )
             if entering:
-                movement_alpha = _ease_in_out(_phase_delay(movement_alpha, 0.02, 0.96))
-            y_index = _continuous_rank_position(effective_previous, float(target_index), movement_alpha)
+                movement_alpha = _ease_in_out(_phase_delay(movement_alpha, 0.46 + entry_lane * 0.035, 0.50))
+                if movement_alpha <= 0.001:
+                    continue
+            if exiting:
+                movement_alpha = _ease_in_out(_phase_delay(movement_alpha, exit_lane * 0.035, 0.46))
+                if movement_alpha >= 0.999:
+                    continue
+            y_index = _continuous_rank_position(effective_previous, effective_target, movement_alpha)
             y = base_y + y_index * pitch
             bar_width = max(8, int((state.population / axis_cap) * bar_max_width))
             moving_up = 1 if target_index < previous_index else 0
@@ -575,11 +606,13 @@ def render_video(
             color = colors[state.country_iso3]
             highlight = _mix_rgb(color, (255, 255, 255), 0.28)
             shadow = _mix_rgb(color, (0, 0, 0), 0.24)
+            value_min_x = bar_left + bar_width + 14
 
-            draw.rounded_rectangle((108, y0 - 3, WIDTH - 64, y1 + 3), radius=19, fill=(3, 15, 27, 62))
+            if SHOW_ROW_BACKPLATE:
+                draw.rounded_rectangle((108, y0 - 3, WIDTH - 64, y1 + 3), radius=19, fill=(3, 15, 27, 62))
 
             flag = flags.get(state.country_code)
-            if flag is not None:
+            if flag is not None and not NAME_IN_BAR:
                 flag_y = y0 + (row_height - flag.height) // 2
                 draw.rounded_rectangle(
                     (flag_left - 4, flag_y - 4, flag_left + flag.width + 4, flag_y + flag.height + 4),
@@ -589,10 +622,11 @@ def render_video(
                 frame.alpha_composite(flag, (flag_left, flag_y))
 
             country_name = state.country_name
-            name_font_state = _name_font_for(country_name)
-            name_bbox = draw.textbbox((0, 0), country_name, font=name_font_state)
-            name_y = y0 + (row_height - (name_bbox[3] - name_bbox[1])) // 2 - name_bbox[1]
-            draw.text((name_left, name_y), country_name, font=name_font_state, fill="#f1f7f8")
+            if not NAME_IN_BAR:
+                name_font_state = _name_font_for(country_name)
+                name_bbox = draw.textbbox((0, 0), country_name, font=name_font_state)
+                name_y = y0 + (row_height - (name_bbox[3] - name_bbox[1])) // 2 - name_bbox[1]
+                draw.text((name_left, name_y), country_name, font=name_font_state, fill="#f1f7f8")
 
             draw.rounded_rectangle(
                 (bar_left + 6, y0 + 6, bar_left + bar_width + 6, y1 + 6),
@@ -618,9 +652,38 @@ def render_video(
                     width=3,
                 )
 
+            if NAME_IN_BAR:
+                name_x = bar_left + 14
+                if flag is not None:
+                    flag_target = (46, 30)
+                    flag_img = flag if flag.size == flag_target else flag.resize(flag_target, Image.Resampling.LANCZOS)
+                    flag_y = y0 + (row_height - flag_img.height) // 2
+                    flag_x = bar_left + 10
+                    draw.rounded_rectangle(
+                        (flag_x - 3, flag_y - 3, flag_x + flag_img.width + 3, flag_y + flag_img.height + 3),
+                        radius=7,
+                        fill=(247, 250, 252, 238),
+                    )
+                    frame.alpha_composite(flag_img, (flag_x, flag_y))
+                    name_x = flag_x + flag_img.width + 8
+                available_name_width = min(360, bar_left + bar_width - name_x - 10)
+                if available_name_width >= 12:
+                    name_font_state = _load_font(24, bold=True)
+                    name_text = _truncate(measure_draw, country_name, name_font_state, available_name_width)
+                    name_bbox = draw.textbbox((0, 0), name_text, font=name_font_state)
+                    name_y = y0 + (row_height - (name_bbox[3] - name_bbox[1])) // 2 - name_bbox[1]
+                    draw.text(
+                        (name_x, name_y),
+                        name_text,
+                        font=name_font_state,
+                        fill="#ffffff",
+                        stroke_width=2,
+                        stroke_fill=(0, 0, 0, 145),
+                    )
+
             value_text = _format_population(state.population)
             value_bbox = draw.textbbox((0, 0), value_text, font=value_font)
-            value_x = min(bar_left + bar_width + 14, WIDTH - 38 - (value_bbox[2] - value_bbox[0]))
+            value_x = min(value_min_x, WIDTH - 38 - (value_bbox[2] - value_bbox[0]))
             value_y = y0 + (row_height - (value_bbox[3] - value_bbox[1])) // 2 - value_bbox[1]
             draw.text((value_x, value_y), value_text, font=value_font, fill="#f7fbfc")
 
