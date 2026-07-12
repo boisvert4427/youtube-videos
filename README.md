@@ -120,6 +120,14 @@ Commandes:
    - Final: `python video_generator/generate_tour_de_france_through_the_years_moviepy.py`
    - Sortie par defaut: `data/processed/cycling/tour_de_france/tour_de_france_through_the_years_1947_2025_4min_60fps.mp4`
    - Assets maillots: `data/raw/cycling/tour_de_france_jerseys/yellow.png`, `green.png`, `polka.png`
+29. Generer une video WTA rankings race:
+   - CSV API officielle: `data/processed/tennis/wta_rankings_weekly_top12_api_only_2000_2026.csv`
+   - Builder API: `python scraper/tennis/build_wta_rankings_api_timeseries.py`
+   - Video finale: `python video_generator/generate_wta_ranking_points_race_moviepy.py`
+   - Preview PNG: `data/processed/tennis/wta_ranking_points_race_preview.png`
+   - Sortie par defaut: `data/processed/tennis/wta_ranking_points_race_2000_2026_38min_60fps_1080p.mp4`
+   - Duree finale: `2280s`, `60 fps`, top 12
+   - Donnees: API officielle WTA uniquement, weekly top 12 entre `2000-11-27` et `2026-06-29`
 
 ## Snapshots et frames YouTube
 
@@ -282,6 +290,29 @@ Points sensibles:
 - Garder la hierarchie visuelle `portrait / nom / montant` sur chaque colonne
 - Conserver des proportions compactes pour rester proche du rendu original
 - Ne pas remplacer le PDF ATP officiel par une source non verifiee sans mettre a jour le builder
+
+## Nouveau template: WTA Rankings Race
+
+Fichiers principaux:
+
+- Builder API: `scraper/tennis/build_wta_rankings_api_timeseries.py`
+- Script canonique: `video_generator/tennis/generate_wta_ranking_points_race_moviepy.py`
+- Wrapper: `video_generator/generate_wta_ranking_points_race_moviepy.py`
+- CSV par defaut: `data/processed/tennis/wta_rankings_weekly_top12_api_only_2000_2026.csv`
+- Preview PNG: `data/processed/tennis/wta_ranking_points_race_preview.png`
+- Sortie par defaut: `data/processed/tennis/wta_ranking_points_race_2000_2026_38min_60fps_1080p.mp4`
+
+Style:
+
+- Format paysage `1920x1080`, duree par defaut `2280s`, `60 fps`, top 12
+- Source de donnees: API officielle WTA uniquement
+- Le rendu utilise le top 12 hebdomadaire entre `2000-11-27` et `2026-06-29`
+
+Points sensibles:
+
+- Ne pas revenir au CSV Kaggle mixte.
+- Conserver le cadre `2000-2026` et la lecture top 12.
+- Garder les images joueurs et drapeaux bien detaches des barres.
 
 ## Nouveau template: Roland-Garros cards
 

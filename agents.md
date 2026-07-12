@@ -114,6 +114,24 @@ du template NBA bracket 2025.
 - Garder un scroll horizontal lent avec des proportions compactes.
 - Le CSV doit rester alimente depuis le PDF officiel ATP et le schema doit suivre si la source change.
 
+## WTA Rankings Race
+
+- Builder API: `scraper/tennis/build_wta_rankings_api_timeseries.py`
+- Script canonique: `video_generator/tennis/generate_wta_ranking_points_race_moviepy.py`
+- Wrapper: `video_generator/generate_wta_ranking_points_race_moviepy.py`
+- CSV par defaut: `data/processed/tennis/wta_rankings_weekly_top12_api_only_2000_2026.csv`
+- Sortie par defaut: `data/processed/tennis/wta_ranking_points_race_2000_2026_38min_60fps_1080p.mp4`
+- Preview PNG: `data/processed/tennis/wta_ranking_points_race_preview.png`
+- Format paysage `1920x1080`, duree finale `2280s`, `60 fps`, top 12
+- Source de donnees: API officielle WTA uniquement
+
+### Objectif Visuel
+
+- Conserver le style broadcast premium, avec la meme hierarchie que les autres bar chart races tennis.
+- Ne pas revenir au vieux CSV mixte Kaggle/API.
+- Le top 12 hebdomadaire doit rester lisible de bout en bout entre `2000-11-27` et `2026-06-29`.
+- Garder le detourage et l'ecart entre photos joueurs, drapeaux et barres.
+
 ## Tour de France Stage Wins Post-War Race
 
 - Builder CSV: `scraper/cycling/build_tour_de_france_postwar_stage_wins_csv.py`

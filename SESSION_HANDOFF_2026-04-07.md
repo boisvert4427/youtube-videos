@@ -82,3 +82,11 @@ Le workflow visuel recent utilise souvent:
 - un controle de frames intermediaires
 - un rendu final vertical `1080x1920`
 - une musique de fond locale dans `data/raw/audio/`
+
+## Note WTA plus recente
+
+- Le workflow WTA rankings race est maintenant base sur l'API officielle WTA uniquement.
+- CSV de reference: `data/processed/tennis/wta_rankings_weekly_top12_api_only_2000_2026.csv`
+- Video finale: `data/processed/tennis/wta_ranking_points_race_2000_2026_38min_60fps_1080p.mp4`
+- Preview PNG: `data/processed/tennis/wta_ranking_points_race_preview.png`
+- Le template utilise le top 12 hebdomadaire entre `2000-11-27` et `2026-06-29`.
