@@ -93,6 +93,16 @@ du template NBA bracket 2025.
 - Contenu: Federer 20, Nadal 22, Djokovic 24 avec portraits, barres animees et recap par age
 - Audio de fond par defaut: `data/raw/audio/audio.mp3`
 
+## Tennis WTA Legends Age Race Shorts
+
+- Script canonique: `video_generator/tennis/generate_serena_graf_evert_navratilova_age_race_shorts_moviepy.py`
+- Wrapper: `video_generator/generate_serena_graf_evert_navratilova_age_race_shorts_moviepy.py`
+- Sortie par defaut: `data/processed/tennis/serena_graf_evert_navratilova_age_race_shorts.mp4`
+- Format vertical `1080x1920`
+- Contenu: Serena Williams, Steffi Graf, Chris Evert et Martina Navratilova avec portraits, barres animees et recap par age
+- Audio de fond par defaut: `data/raw/audio/audio.mp3`
+- Le template reutilise le moteur Tennis age race, avec override des joueurs, couleurs, photos, axe et echelle.
+
 ## ATP Prize Money Leaders Landscape Race
 
 - Builder CSV: `scraper/tennis/build_atp_prize_money_leaders_csv.py`

@@ -71,56 +71,58 @@ Commandes:
    - `python video_generator/generate_federer_vs_nadal_retro_fight_shorts_moviepy.py`
 10. Generer un Short Federer Nadal Djokovic Grand Slam par age:
    - `python video_generator/generate_federer_nadal_djokovic_age_race_shorts_moviepy.py`
-11. Generer un Short Ronaldo vs Messi buts par age:
+11. Generer un Short Serena Graf Evert Navratilova Grand Slam par age:
+   - `python video_generator/generate_serena_graf_evert_navratilova_age_race_shorts_moviepy.py`
+12. Generer un Short Ronaldo vs Messi buts par age:
    - `python video_generator/football/generate_ronaldo_messi_goals_by_age_race_shorts_moviepy.py`
-12. Generer un Short PSG vs Liverpool 2026 ultra anime:
+13. Generer un Short PSG vs Liverpool 2026 ultra anime:
    - `python video_generator/generate_psg_vs_liverpool_double_confrontation_shorts_moviepy.py`
-13. Generer un Short SGA vs Jokic version Bird vs Magic:
+14. Generer un Short SGA vs Jokic version Bird vs Magic:
    - `python video_generator/generate_sga_vs_jokic_career_shorts_moviepy.py`
-14. Generer un Short Rookie of the Year Flagg vs Knueppel:
+15. Generer un Short Rookie of the Year Flagg vs Knueppel:
    - `python video_generator/generate_cooper_flagg_vs_kon_knueppel_roty_shorts_moviepy.py`
-15. Generer un Short SGA vs Jokic vs Wemby:
+16. Generer un Short SGA vs Jokic vs Wemby:
    - `python video_generator/generate_sga_jokic_wemby_mvp_short_moviepy.py`
-16. Generer un Short NBA bracket 2025 style TV:
+17. Generer un Short NBA bracket 2025 style TV:
    - `python video_generator/generate_nba_playoff_bracket_2025_moviepy.py`
-17. Generer le CSV MVP Ladder NBA 2025-26 weekly:
+18. Generer le CSV MVP Ladder NBA 2025-26 weekly:
    - `python scraper/basketball/build_nba_kia_mvp_ladder_weekly_csv.py`
-18. Generer un Short NBA MVP Ladder weekly cumule:
+19. Generer un Short NBA MVP Ladder weekly cumule:
    - `python video_generator/basketball/generate_nba_mvp_ladder_weekly_race_shorts_moviepy.py`
-19. Generer le CSV LeBron vs Jordan vs Kobe points par age:
+20. Generer le CSV LeBron vs Jordan vs Kobe points par age:
    - `python scraper/basketball/build_nba_points_by_age_csv.py`
-20. Generer un Short LeBron vs Jordan vs Kobe points par age:
+21. Generer un Short LeBron vs Jordan vs Kobe points par age:
    - `python video_generator/basketball/generate_lebron_jordan_kobe_points_by_age_race_shorts_moviepy.py`
-21. Extraire des snapshots ou toutes les frames d'une video YouTube:
+22. Extraire des snapshots ou toutes les frames d'une video YouTube:
    - `python video_tools/extract_youtube_short_snapshots.py "https://www.youtube.com/watch?v=VIDEO_ID" --interval 1`
    - `python video_tools/extract_youtube_short_snapshots.py "https://www.youtube.com/watch?v=VIDEO_ID" --all-frames`
    - `python video_tools/extract_youtube_short_snapshots.py "https://www.youtube.com/watch?v=VIDEO_ID" --all-frames --tail-seconds 40`
-22. Generer un Short Federer vs Nadal H2H en scores:
+23. Generer un Short Federer vs Nadal H2H en scores:
    - `python video_generator/generate_federer_vs_nadal_h2h_scores_shorts_moviepy.py`
-23. Generer un Short NBA titres par franchise en podium 2025:
+24. Generer un Short NBA titres par franchise en podium 2025:
    - `python video_generator/generate_nba_championship_podium_short_moviepy.py`
-24. Generer une version Manim plus premium du podium NBA titres 2025:
+25. Generer une version Manim plus premium du podium NBA titres 2025:
    - Preview rapide: `python video_generator/generate_nba_titles_podium_2025_manim.py --render --quality l --duration 6 --width 540 --height 960 --fps 12 --output data/processed/basketball/nba_titles_franchise_podium_2025_manim_preview.mp4`
    - Final: `python video_generator/generate_nba_titles_podium_2025_manim.py --render --quality h --duration 80 --width 1080 --height 1920 --fps 30 --mix-audio`
-25. Generer un Short Roland-Garros cards + timeline:
+26. Generer un Short Roland-Garros cards + timeline:
    - Preview rapide: `python video_generator/generate_roland_garros_titles_cards_timeline_shorts_moviepy.py --duration 8 --fps 30 --output data/processed/tennis/roland_garros_titles_cards_timeline_preview_8s_30fps.mp4`
    - Final: `python video_generator/generate_roland_garros_titles_cards_timeline_shorts_moviepy.py`
-26. Generer un Short Roland-Garros ref-style cards:
+27. Generer un Short Roland-Garros ref-style cards:
    - Preview rapide: `python video_generator/generate_roland_garros_titles_cards_refstyle_shorts_moviepy.py --duration 8 --fps 30 --output data/processed/tennis/roland_garros_titles_cards_refstyle_preview_8s.mp4`
    - Final: `python video_generator/generate_roland_garros_titles_cards_refstyle_shorts_moviepy.py`
-27. Generer un preview Roland-Garros cards + vrais points de match:
+28. Generer un preview Roland-Garros cards + vrais points de match:
    - Preview Nadal: `python video_generator/generate_roland_garros_titles_cards_matchpoint_preview_moviepy.py --url "https://www.youtube.com/watch?v=Fkv_NJLsvAU" --start 9:08 --end 9:25 --focus-player Nadal`
    - Sortie par defaut: `data/processed/tennis/roland_garros_titles_cards_matchpoint_preview.mp4`
    - Montage sequence 5 -> 1, avec un ecran par rang.
    - Layout 1/3 carte en haut, 2/3 video en bas, sur toute la largeur.
    - La video de match est active uniquement sur Nadal; les autres ecrans gardent le bas noir.
-28. Generer la timeline paysage Tour de France through the years:
+29. Generer la timeline paysage Tour de France through the years:
    - CSV: `python scraper/build_tour_de_france_through_the_years_csv.py`
    - Preview PNG: `python video_generator/generate_tour_de_france_through_the_years_moviepy.py --preview data/processed/cycling/tour_de_france/tour_de_france_through_the_years_preview.png`
    - Final: `python video_generator/generate_tour_de_france_through_the_years_moviepy.py`
    - Sortie par defaut: `data/processed/cycling/tour_de_france/tour_de_france_through_the_years_1947_2025_4min_60fps.mp4`
    - Assets maillots: `data/raw/cycling/tour_de_france_jerseys/yellow.png`, `green.png`, `polka.png`
-29. Generer une video WTA rankings race:
+30. Generer une video WTA rankings race:
    - CSV API officielle: `data/processed/tennis/wta_rankings_weekly_top12_api_only_2000_2026.csv`
    - Builder API: `python scraper/tennis/build_wta_rankings_api_timeseries.py`
    - Video finale: `python video_generator/generate_wta_ranking_points_race_moviepy.py`
