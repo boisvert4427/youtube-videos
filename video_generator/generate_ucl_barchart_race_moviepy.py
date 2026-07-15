@@ -91,22 +91,27 @@ class Snapshot:
     states: list[ClubState]
 
 
-def build_audio_track(audio_path: Path, duration: float):
+def build_audio_track(audio_path: Path, duration: float, start_time: float = 0.0, fade_out: bool = True):
     base = AudioFileClip(str(audio_path))
-    if base.duration >= duration:
-        return base.subclipped(0, duration).with_effects([AudioFadeOut(FINAL_AUDIO_FADE_OUT)]), [base]
+    if base.duration >= duration + start_time:
+        clip = base.subclipped(start_time, start_time + duration)
+        if fade_out:
+            clip = clip.with_effects([AudioFadeOut(FINAL_AUDIO_FADE_OUT)])
+        return clip, [base]
 
     clips = []
     keep_alive = [base]
     step = max(0.1, base.duration - LOOP_CROSSFADE)
-    loops = int(math.ceil(max(0.0, duration - LOOP_CROSSFADE) / step))
+    loops = int(math.ceil(max(0.0, start_time + duration - LOOP_CROSSFADE) / step))
     for index in range(loops):
         segment = (
-            base.with_start(index * step)
+            base.with_start(index * step - start_time)
             .with_effects([AudioFadeIn(LOOP_CROSSFADE), AudioFadeOut(LOOP_CROSSFADE)])
         )
         clips.append(segment)
-    mixed = CompositeAudioClip(clips).with_duration(duration).with_effects([AudioFadeOut(FINAL_AUDIO_FADE_OUT)])
+    mixed = CompositeAudioClip(clips).with_duration(duration)
+    if fade_out:
+        mixed = mixed.with_effects([AudioFadeOut(FINAL_AUDIO_FADE_OUT)])
     return mixed, keep_alive
 
 
